@@ -1,7 +1,15 @@
 import { Application, Graphics } from "pixi.js";
 
 import "./style.css";
-import { DEFAULT_CONFIG, REEL_GAP, ROW_GAP, type GameConfig } from "./config";
+import {
+  DEFAULT_CONFIG,
+  REEL_GAP,
+  ROW_GAP,
+  SYMBOLS,
+  type GameConfig,
+} from "./config";
+import { createSymbolSprite } from "./game/symbols";
+import { COLORS } from "./colors";
 
 const HEADER_H = 48;
 const FOOTER_H = 108;
@@ -45,7 +53,7 @@ const computeLayout = (
 const app = new Application();
 await app.init({
   resizeTo: window,
-  backgroundColor: 0x090918,
+  backgroundColor: COLORS.background,
   antialias: true,
   autoDensity: true,
   resolution: window.devicePixelRatio || 1,
@@ -63,18 +71,25 @@ const g = new Graphics();
 
 // reels
 g.rect(reelsX, reelsY, reelW, reelH);
-g.stroke({ color: 0xff0000, width: 2 });
+g.stroke({ color: COLORS.debugRed, width: 2 });
 
 // header
 g.rect(0, 0, app.screen.width, HEADER_H);
-g.stroke({ color: 0x0000ff, width: 2 });
+g.stroke({ color: COLORS.debugBlue, width: 2 });
 
 // footer
 g.rect(0, app.screen.height - FOOTER_H, app.screen.width, FOOTER_H);
-g.stroke({ color: 0x00ff00, width: 2 });
+g.stroke({ color: COLORS.debugGreen, width: 2 });
 
 // controls
 g.circle(app.screen.width / 2, controlsY, 6);
-g.stroke({ color: 0xffff00, width: 2 });
+g.stroke({ color: COLORS.debugYellow, width: 2 });
 
 app.stage.addChild(g);
+
+SYMBOLS.forEach((symbol, i) => {
+  const sprite = createSymbolSprite(i, symbol, 50);
+  sprite.x = 20 + i * 110;
+  sprite.y = 200;
+  app.stage.addChild(sprite);
+});
