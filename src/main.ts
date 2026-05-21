@@ -1,4 +1,4 @@
-import { Application, Graphics } from "pixi.js";
+import { Application, Assets, Graphics } from "pixi.js";
 
 import "./style.css";
 import {
@@ -8,8 +8,8 @@ import {
   SYMBOLS,
   type GameConfig,
 } from "./config";
-import { createSymbolSprite } from "./game/symbols";
 import { COLORS } from "./colors";
+import { createReelGroup } from "./game/reels";
 
 const HEADER_H = 48;
 const FOOTER_H = 108;
@@ -60,8 +60,11 @@ await app.init({
 });
 document.getElementById("app")!.appendChild(app.canvas);
 
+// load all symbol images
+await Assets.load(SYMBOLS.map((s) => ({ alias: s, src: `/${s}.png` })));
+
 // TODO: remove when done
-const { reelW, reelH, reelsX, reelsY, controlsY } = computeLayout(
+const { reelW, reelH, reelsX, reelsY, controlsY, symbolSize } = computeLayout(
   DEFAULT_CONFIG,
   app.screen.width,
   app.screen.height,
@@ -87,9 +90,10 @@ g.stroke({ color: COLORS.debugYellow, width: 2 });
 
 app.stage.addChild(g);
 
-SYMBOLS.forEach((symbol, i) => {
-  const sprite = createSymbolSprite(i, symbol, 50);
-  sprite.x = 20 + i * 110;
-  sprite.y = 200;
-  app.stage.addChild(sprite);
-});
+const reelGroup = createReelGroup(DEFAULT_CONFIG, symbolSize);
+reelGroup.root.x = reelsX;
+reelGroup.root.y = reelsY;
+app.stage.addChild(reelGroup.root);
+
+// save button triggers the hot reload no need to refresh
+reelGroup.spin([3, 6, 1, 7, 2], () => console.log("all stopped"));
