@@ -48,6 +48,8 @@
 
 body {
   margin: 0;
+  /* No scroll bars */
+  overflow: hidden;
 }
 
 h1,
