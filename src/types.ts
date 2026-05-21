@@ -2,7 +2,7 @@ export type WinTier = "small" | "win" | "bigwin" | "jackpot";
 
 // Tier is relative to reelCount so it wrks for any configured reel count
 // 3 reels: 2=win 3=jackpot | 5 reels: 2=small 3=win 4=bigwin 5=jackpot
-export function getWinTier(matchCount: number, reelCount: number): WinTier {
+export const getWinTier = (matchCount: number, reelCount: number): WinTier => {
   // All matched = jackpot
   if (matchCount >= reelCount) return "jackpot";
   const ratio = matchCount / reelCount;
@@ -10,7 +10,7 @@ export function getWinTier(matchCount: number, reelCount: number): WinTier {
   if (ratio >= 0.75) return "bigwin";
   if (ratio >= 0.5) return "win";
   return "small";
-}
+};
 
 // Win multiplier
 // TODO: play with numbers after testing the gameplay

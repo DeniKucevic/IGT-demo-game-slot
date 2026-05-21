@@ -10,6 +10,9 @@ export const COLORS = {
   americano: "#8b4513",
   turkish: "#c4a35a",
 
+  //reels
+  maskFill: "#ffffff",
+
   // ui
   background: "#090918",
   gold: "#ffd700",
