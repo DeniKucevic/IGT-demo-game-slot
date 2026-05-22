@@ -1,5 +1,4 @@
 import { Application, Assets, Graphics } from "pixi.js";
-
 import "./style.css";
 import {
   DEFAULT_CONFIG,
@@ -7,40 +6,34 @@ import {
   ROW_GAP,
   SYMBOLS,
   type GameConfig,
-} from "./config";
-import { COLORS } from "./colors";
+} from "./shared/config";
+import { COLORS } from "./shared/colors";
 import { createReelGroup } from "./game/reels";
-import { getResponseData } from "./server/server";
+import { getResponseData } from "./server/api";
+import { createSpinButton } from "./ui/spin-button";
 
 const HEADER_H = 48;
 const FOOTER_H = 108;
 const H_PAD = 32;
 const V_PAD = 20;
 
-// Makes you appreciate the layout engine....
 const computeLayout = (
   config: GameConfig,
   screenW: number,
   screenH: number,
 ) => {
-  // Total available
   const availW = screenW - H_PAD * 2;
   const availH = screenH - HEADER_H - FOOTER_H - V_PAD * 2;
-
   const symFromW = Math.floor(
-    // available - total gaps / total
     (availW - (config.reelCount - 1) * REEL_GAP) / config.reelCount,
   );
   const symFromH = Math.floor(
     (availH - (config.rowCount - 1) * ROW_GAP) / config.rowCount,
   );
   const symbolSize = Math.max(40, Math.min(symFromW, symFromH));
-
-  // Total sizes combined
   const reelW =
     config.reelCount * symbolSize + (config.reelCount - 1) * REEL_GAP;
   const reelH = config.rowCount * symbolSize + (config.rowCount - 1) * ROW_GAP;
-
   return {
     symbolSize,
     reelW,
@@ -51,6 +44,7 @@ const computeLayout = (
   };
 };
 
+// ── App ──
 const app = new Application();
 await app.init({
   resizeTo: window,
@@ -60,45 +54,63 @@ await app.init({
   resolution: window.devicePixelRatio || 1,
 });
 document.getElementById("app")!.appendChild(app.canvas);
+await Assets.load(SYMBOLS.map((s) => ({ alias: s, src: `/symbols/${s}.png` })));
 
-// load all symbol images
-await Assets.load(SYMBOLS.map((s) => ({ alias: s, src: `/${s}.png` })));
-
-// TODO: remove when done
-const { reelW, reelH, reelsX, reelsY, controlsY, symbolSize } = computeLayout(
+// ── Layout ──
+const { symbolSize, reelW, reelH, reelsX, reelsY, controlsY } = computeLayout(
   DEFAULT_CONFIG,
   app.screen.width,
   app.screen.height,
 );
 
-const g = new Graphics();
+//  Debug overlay (TODO: remove)
+const debug = new Graphics();
+debug.rect(reelsX, reelsY, reelW, reelH);
+debug.stroke({ color: COLORS.debugRed, width: 2 });
+debug.rect(0, 0, app.screen.width, HEADER_H);
+debug.stroke({ color: COLORS.debugBlue, width: 2 });
+debug.rect(0, app.screen.height - FOOTER_H, app.screen.width, FOOTER_H);
+debug.stroke({ color: COLORS.debugGreen, width: 2 });
+debug.circle(app.screen.width / 2, controlsY, 6);
+debug.stroke({ color: COLORS.debugYellow, width: 2 });
+app.stage.addChild(debug);
 
-// reels
-g.rect(reelsX, reelsY, reelW, reelH);
-g.stroke({ color: COLORS.debugRed, width: 2 });
-
-// header
-g.rect(0, 0, app.screen.width, HEADER_H);
-g.stroke({ color: COLORS.debugBlue, width: 2 });
-
-// footer
-g.rect(0, app.screen.height - FOOTER_H, app.screen.width, FOOTER_H);
-g.stroke({ color: COLORS.debugGreen, width: 2 });
-
-// controls
-g.circle(app.screen.width / 2, controlsY, 6);
-g.stroke({ color: COLORS.debugYellow, width: 2 });
-
-app.stage.addChild(g);
-
+// ── Reels ──
 const reelGroup = createReelGroup(DEFAULT_CONFIG, symbolSize);
 reelGroup.root.x = reelsX;
 reelGroup.root.y = reelsY;
 app.stage.addChild(reelGroup.root);
 
-app.stage.addChild(reelGroup.root);
+// ── Spin button ──
+const spinButton = createSpinButton();
+spinButton.root.x = reelsX + reelW / 2 - spinButton.width / 2;
+spinButton.root.y = controlsY;
+app.stage.addChild(spinButton.root);
 
-const result = getResponseData(DEFAULT_CONFIG);
-reelGroup.spin(result.reelPositions, () => {
-  console.log("stopped", result.winningLines, result.prize);
+// ── Game loop ──
+let spinning = false;
+
+const runSpin = (): void => {
+  if (spinning) return;
+  spinning = true;
+  spinButton.setEnabled(false);
+  reelGroup.clearHighlights();
+  reelGroup.spin();
+  const result = getResponseData(DEFAULT_CONFIG);
+  reelGroup.land(result.reelPositions, () => {
+    if (result.winningLines.length > 0) {
+      reelGroup.highlightWins(result.winningLines);
+    }
+    console.log("result:", result.winningLines, result.prize);
+    spinning = false;
+    spinButton.setEnabled(true);
+  });
+};
+
+spinButton.root.on("pointertap", runSpin);
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    runSpin();
+  }
 });

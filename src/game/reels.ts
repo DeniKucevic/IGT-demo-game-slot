@@ -1,44 +1,40 @@
 import { Container, Graphics, Ticker } from "pixi.js";
-import type { GameConfig } from "../config";
-import { REEL_GAP, ROW_GAP, SYMBOLS } from "../config";
-import { createSymbolSprite } from "./symbols";
-import { COLORS } from "../colors";
+import type { GameConfig } from "../shared/config";
+import { REEL_GAP, REEL_STRIPS, ROW_GAP } from "../shared/config";
+import { createSymbolSlot } from "./symbols";
+import { COLORS } from "../shared/colors";
+import type { WinLine } from "../shared/types";
 
-const TOTAL_REPS = 10;
-
-const ACCEL_DURATION = 400; // ramp up from 0 to full speed
-const MIN_SPIN_DURATION = 700; // at full speed before decel is allowed
-const DECEL_DURATION = 480; // ramp down from full speed to stop
-const REEL_STOP_DELAY = 320; // between each reel starting its sequence (left → right)
-
-const BASE_MAX_SPEED = 2.6;
+const ACCEL_DURATION = 400;
+const MIN_SPIN_DURATION = 700;
+const DECEL_DURATION = 480;
+const REEL_STOP_DELAY = 320;
+const BASE_MAX_SPEED = 2.6; // ms at symbolSize=100
 
 type ReelPhase = "idle" | "accel" | "spin" | "decel" | "done";
 
 type ReelState = {
-  container: Container;
   phase: ReelPhase;
   elapsed: number;
-  targetY: number;
-  decelStartY: number;
+  position: number; // continuous float in symbol units
+  startPos: number; // captured when decel begins
+  targetPos: number; // integer symbol index to land on
+  pendingStopIndex: number | null;
+  slots: ReturnType<typeof createSymbolSlot>[];
 };
 
 export type ReelGroup = {
   root: Container;
-  spin: (
-    stopPositions: number[],
-    onAllStopped: () => void,
-    onReelStopped?: (reelIndex: number) => void,
-  ) => void;
+  spin: (onReelStopped?: (reelIndex: number) => void) => void;
+  land: (stopPositions: number[], onAllStopped: () => void) => void;
+  highlightWins: (winLines: WinLine[]) => void;
+  clearHighlights: () => void;
   width: number;
   height: number;
 };
 
-// Easing functions
-const easeIn = (t: number): number => {
-  return t * t;
-};
-
+// https://easings.net/#
+const easeIn = (t: number): number => t * t;
 const easeOutBounce = (t: number): number => {
   if (t < 0.75) {
     const s = t / 0.75;
@@ -47,42 +43,19 @@ const easeOutBounce = (t: number): number => {
   return 1.04 - 0.04 * ((t - 0.75) / 0.25);
 };
 
-// We build a strip of symbols
-const buildStrip = (symbolSize: number): Container => {
-  const total = SYMBOLS.length * TOTAL_REPS;
-  const strip = new Container();
-  for (let i = 0; i < total; i++) {
-    const symbolIndex = i % SYMBOLS.length;
-    const sprite = createSymbolSprite(
-      symbolIndex,
-      SYMBOLS[symbolIndex],
-      symbolSize,
-    );
-    sprite.y = i * (symbolSize + ROW_GAP);
-    strip.addChild(sprite);
-  }
-  return strip;
-};
-
 export const createReelGroup = (
   config: GameConfig,
   symbolSize: number,
 ): ReelGroup => {
   const { reelCount, rowCount } = config;
   const symbolStep = symbolSize + ROW_GAP;
-
-  const cycleLength = SYMBOLS.length * symbolStep;
-
   const viewH = rowCount * symbolStep - ROW_GAP;
   const viewW = reelCount * (symbolSize + REEL_GAP) - REEL_GAP;
 
-  // Adjust speed based on sprite size
-  const maxSpeed = BASE_MAX_SPEED * (symbolSize / 100);
+  const maxSpeed = (BASE_MAX_SPEED * (symbolSize / 100)) / symbolStep;
+  const SLOT_COUNT = rowCount + 2;
 
   const root = new Container();
-
-  // Graphics mask clips symbols to the visible window
-  // Mask shape needs fill propery, color does not matter
   const maskShape = new Graphics()
     .rect(0, 0, viewW, viewH)
     .fill(COLORS.maskFill);
@@ -91,92 +64,141 @@ export const createReelGroup = (
 
   const states: ReelState[] = [];
 
-  for (let r = 0; r < reelCount; r++) {
-    const strip = buildStrip(symbolSize);
-    strip.x = r * (symbolSize + REEL_GAP);
-    strip.y = 0;
-    root.addChild(strip);
-    states.push({
-      container: strip,
+  // Updates all slot positions and textures for the current position
+  const updateSlots = (state: ReelState, reelIndex: number): void => {
+    const strip = REEL_STRIPS[reelIndex];
+    const scrollFraction = state.position - Math.floor(state.position);
+    const stripIndex = Math.floor(state.position);
+
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      state.slots[i].container.y = (i - 1 - scrollFraction) * symbolStep;
+      const symbolIndex =
+        strip[
+          (((stripIndex - 1 + i) % strip.length) + strip.length) % strip.length
+        ];
+      state.slots[i].setSymbol(symbolIndex);
+    }
+  };
+
+  for (let reelIndex = 0; reelIndex < reelCount; reelIndex++) {
+    const reelContainer = new Container();
+    reelContainer.x = reelIndex * (symbolSize + REEL_GAP);
+    root.addChild(reelContainer);
+
+    const strip = REEL_STRIPS[reelIndex];
+    const slots = Array.from({ length: SLOT_COUNT }, (_, i) => {
+      const slot = createSymbolSlot(symbolSize);
+      slot.setSymbol(strip[i % strip.length]);
+      reelContainer.addChild(slot.container);
+      return slot;
+    });
+
+    const state: ReelState = {
       phase: "idle",
       elapsed: 0,
-      targetY: 0,
-      decelStartY: 0,
-    });
+      position: 0,
+      startPos: 0,
+      targetPos: 0,
+      pendingStopIndex: null,
+      slots,
+    };
+    states.push(state);
+    updateSlots(state, reelIndex);
   }
 
-  const spin = (stopPositions: number[], onAllStopped: () => void): void => {
-    let stoppedReelsCount = 0;
+  let stoppedReelsCount = 0;
+  let allStoppedCallback: (() => void) | null = null;
+
+  const land = (stopPositions: number[], onAllStopped: () => void): void => {
+    allStoppedCallback = onAllStopped;
+    states.forEach((state, reelIndex) => {
+      state.pendingStopIndex = stopPositions[reelIndex];
+    });
+  };
+
+  const spin = (onReelStopped?: (reelIndex: number) => void): void => {
+    stoppedReelsCount = 0;
+    allStoppedCallback = null;
 
     states.forEach((state, reelIndex) => {
       state.phase = "accel";
       state.elapsed = 0;
-
-      const targetInPixels = -stopPositions[reelIndex] * symbolStep;
+      state.pendingStopIndex = null;
 
       setTimeout(() => {
-        const ticker = Ticker.shared;
+        const sharedTicker = Ticker.shared;
 
-        const onTick = (t: Ticker): void => {
-          const dt = t.deltaMS;
+        const onTick = (ticker: Ticker): void => {
+          const dt = ticker.deltaMS;
           state.elapsed += dt;
 
           if (state.phase === "accel") {
             const progress = Math.min(state.elapsed / ACCEL_DURATION, 1);
-            // Move strip
-            state.container.y =
-              state.container.y - maxSpeed * easeIn(progress) * dt;
+            state.position += maxSpeed * easeIn(progress) * dt;
             if (progress >= 1) {
-              // Change state
               state.phase = "spin";
-              // Reset time
               state.elapsed = 0;
             }
           } else if (state.phase === "spin") {
-            // Move
-            state.container.y = state.container.y - maxSpeed * dt;
+            state.position += maxSpeed * dt;
 
-            if (state.elapsed >= MIN_SPIN_DURATION) {
-              let nearestLandingY = targetInPixels;
-              while (nearestLandingY > state.container.y) {
-                nearestLandingY = nearestLandingY - cycleLength;
-              }
-              while (state.container.y - nearestLandingY > cycleLength) {
-                nearestLandingY = nearestLandingY + cycleLength;
-              }
+            if (
+              state.pendingStopIndex !== null &&
+              state.elapsed >= MIN_SPIN_DURATION
+            ) {
+              const strip = REEL_STRIPS[reelIndex];
+              const minDecelDistance = maxSpeed * DECEL_DURATION * 0.5;
+              let targetPos = state.pendingStopIndex;
+              // Find nearest copy of stopIndex ahead of current position
+              while (targetPos <= state.position + minDecelDistance)
+                targetPos += strip.length;
 
-              state.targetY = nearestLandingY;
-              state.decelStartY = state.container.y;
+              state.targetPos = targetPos;
+              state.startPos = state.position;
               state.phase = "decel";
               state.elapsed = 0;
             }
           } else if (state.phase === "decel") {
             const progress = Math.min(state.elapsed / DECEL_DURATION, 1);
-            const decelDistance = state.decelStartY - state.targetY;
-
-            state.container.y =
-              state.decelStartY - decelDistance * easeOutBounce(progress);
+            state.position =
+              state.startPos +
+              (state.targetPos - state.startPos) * easeOutBounce(progress);
 
             if (state.elapsed >= DECEL_DURATION) {
-              state.container.y = state.targetY;
+              state.position = state.targetPos;
               state.phase = "done";
-              ticker.remove(onTick);
+              sharedTicker.remove(onTick);
               stoppedReelsCount++;
+              onReelStopped?.(reelIndex);
 
               if (stoppedReelsCount === reelCount) {
-                states.forEach((st, ri) => {
-                  st.container.y = -stopPositions[ri] * symbolStep;
-                });
-                onAllStopped();
+                allStoppedCallback?.();
               }
             }
           }
+
+          updateSlots(state, reelIndex);
         };
 
-        ticker.add(onTick);
+        sharedTicker.add(onTick);
       }, reelIndex * REEL_STOP_DELAY);
     });
   };
 
-  return { root, spin, width: viewW, height: viewH };
+  // Only highlights the symbols that matched (reels 0..matchCount-1 for each line)
+  const highlightWins = (winLines: WinLine[]): void => {
+    winLines.forEach(({ row, matchCount }) => {
+      for (let reelIndex = 0; reelIndex < matchCount; reelIndex++) {
+        states[reelIndex].slots[row + 1].highlight(true);
+      }
+    });
+  };
+
+  const clearHighlights = (): void => {
+    states.forEach((state) => {
+      state.slots.forEach((slot) => slot.highlight(false));
+    });
+  };
+
+  return { root, spin, land, highlightWins, clearHighlights, width: viewW, height: viewH };
 };

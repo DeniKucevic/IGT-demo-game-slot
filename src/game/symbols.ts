@@ -1,5 +1,6 @@
-import { Graphics, Text, TextStyle, Container, Sprite } from "pixi.js";
-import { COLORS } from "../colors";
+import { Container, Graphics, Sprite, Texture, Ticker } from "pixi.js";
+import { SYMBOLS } from "../shared/config";
+import { COLORS } from "../shared/colors";
 
 const SYMBOL_COLORS = [
   COLORS.espresso,
@@ -12,30 +13,61 @@ const SYMBOL_COLORS = [
   COLORS.turkish,
 ];
 
-export const createSymbolSprite = (
-  symbolIndex: number,
-  symbol: string,
-  symbolSize: number,
-): Container => {
+export type SymbolSlot = {
+  container: Container;
+  setSymbol: (symbolIndex: number) => void;
+  highlight: (on: boolean) => void;
+};
+
+export const createSymbolSlot = (symbolSize: number): SymbolSlot => {
   const container = new Container();
 
-  const bg = new Graphics();
-  // Same symbols same color
-  // Safety not to pass undefined ( 9 % 8 ) = 1
-  const color = SYMBOL_COLORS[symbolIndex % SYMBOL_COLORS.length];
+  const background = new Graphics();
+  container.addChild(background);
 
-  bg.roundRect(2, 2, symbolSize - 4, symbolSize - 4, 12);
-  bg.fill({ color, alpha: 0.85 });
-  bg.stroke({ color: COLORS.white, alpha: 0.3, width: 2 });
-  container.addChild(bg);
-
-  const sprite = Sprite.from(symbol);
+  const sprite = new Sprite();
   sprite.width = symbolSize - 8;
   sprite.height = symbolSize - 8;
   sprite.x = 4;
   sprite.y = 4;
   container.addChild(sprite);
 
-  container.label = `symbol-${symbolIndex}`;
-  return container;
+  const glowOverlay = new Graphics();
+  container.addChild(glowOverlay);
+
+  const setSymbol = (symbolIndex: number): void => {
+    background.clear();
+    background.roundRect(2, 2, symbolSize - 4, symbolSize - 4, 12);
+    background.fill({
+      color: SYMBOL_COLORS[symbolIndex % SYMBOL_COLORS.length],
+      alpha: 0.85,
+    });
+    background.stroke({ color: COLORS.white, alpha: 0.3, width: 2 });
+    sprite.texture = Texture.from(SYMBOLS[symbolIndex]);
+  };
+
+  let highlightTicker: ((t: Ticker) => void) | null = null;
+  let highlightTime = 0;
+
+  const highlight = (on: boolean): void => {
+    if (highlightTicker) {
+      Ticker.shared.remove(highlightTicker);
+      highlightTicker = null;
+    }
+    glowOverlay.clear();
+
+    if (on) {
+      highlightTime = 0;
+      highlightTicker = (t: Ticker) => {
+        highlightTime += t.deltaMS;
+        const alpha = 0.55 + 0.45 * Math.sin(highlightTime / 280);
+        glowOverlay.clear();
+        glowOverlay.roundRect(1, 1, symbolSize - 2, symbolSize - 2, 13);
+        glowOverlay.stroke({ color: COLORS.gold, alpha, width: 5 });
+      };
+      Ticker.shared.add(highlightTicker);
+    }
+  };
+
+  return { container, setSymbol, highlight };
 };
