@@ -19,6 +19,14 @@ export const SYMBOLS = [
   "turkish",
 ];
 
+export const REEL_STRIPS: number[][] = [
+  [0, 5, 3, 7, 1, 4, 6, 2],
+  [2, 0, 6, 3, 5, 1, 7, 4],
+  [4, 7, 1, 5, 2, 6, 0, 3],
+  [6, 3, 5, 0, 7, 2, 4, 1],
+  [1, 4, 7, 2, 0, 3, 5, 6],
+];
+
 export const DEFAULT_CONFIG: GameConfig = {
   reelCount: 5,
   rowCount: 3,
