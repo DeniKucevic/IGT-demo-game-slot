@@ -10,6 +10,7 @@ import {
 } from "./config";
 import { COLORS } from "./colors";
 import { createReelGroup } from "./game/reels";
+import { getResponseData } from "./server/server";
 
 const HEADER_H = 48;
 const FOOTER_H = 108;
@@ -95,5 +96,9 @@ reelGroup.root.x = reelsX;
 reelGroup.root.y = reelsY;
 app.stage.addChild(reelGroup.root);
 
-// save button triggers the hot reload no need to refresh
-reelGroup.spin([3, 6, 1, 7, 2], () => console.log("all stopped"));
+app.stage.addChild(reelGroup.root);
+
+const result = getResponseData(DEFAULT_CONFIG);
+reelGroup.spin(result.reelPositions, () => {
+  console.log("stopped", result.winningLines, result.prize);
+});

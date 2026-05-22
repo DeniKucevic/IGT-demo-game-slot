@@ -37,6 +37,7 @@ export type WinLine = {
 
 export type ServerResponse = {
   reelPositions: number[];
+  grid: number[][];
   winningLines: WinLine[];
   prize: number;
 };
