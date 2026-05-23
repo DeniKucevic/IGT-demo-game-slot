@@ -26,6 +26,7 @@ export type BetSelector = {
   getBet: () => number;
   setEnabled: (enabled: boolean) => void;
   setAllIn: (active: boolean) => void;
+  setMaxBet: (balance: number) => void;
   width: number;
   height: number;
 };
@@ -35,6 +36,7 @@ export const createBetSelector = (onSelect: () => void): BetSelector => {
   let selectedIndex = 1;
   let enabled = true;
   let allInActive = false;
+  let maxBet = Infinity;
 
   const cards: Container[] = [];
   const bgs: Graphics[] = [];
@@ -53,7 +55,15 @@ export const createBetSelector = (onSelect: () => void): BetSelector => {
   const updateCards = (): void => {
     bgs.forEach((_, i) => drawBg(i));
     cards.forEach((c, i) => {
-      c.alpha = !allInActive && i === selectedIndex ? 1 : 0.28;
+      const affordable = OPTIONS[i].bet <= maxBet;
+      if (!allInActive && i === selectedIndex) {
+        c.alpha = 1;
+      } else if (!affordable) {
+        c.alpha = 0.15;
+      } else {
+        c.alpha = 0.28;
+      }
+      c.cursor = !enabled ? 'default' : !affordable ? 'not-allowed' : 'pointer';
     });
   };
 
@@ -94,13 +104,13 @@ export const createBetSelector = (onSelect: () => void): BetSelector => {
     card.addChild(valueText);
 
     card.on('pointerover', () => {
-      if (enabled && i !== selectedIndex) card.alpha = 0.55;
+      if (enabled && i !== selectedIndex && OPTIONS[i].bet <= maxBet) card.alpha = 0.55;
     });
     card.on('pointerout', () => {
-      card.alpha = i === selectedIndex ? 1 : 0.28;
+      updateCards();
     });
     card.on('pointertap', () => {
-      if (!enabled) return;
+      if (!enabled || OPTIONS[i].bet > maxBet) return;
       allInActive = false;
       selectedIndex = i;
       updateCards();
@@ -114,8 +124,8 @@ export const createBetSelector = (onSelect: () => void): BetSelector => {
     enabled = isEnabled;
     cards.forEach((c) => {
       c.eventMode = isEnabled ? 'static' : 'none';
-      c.cursor = isEnabled ? 'pointer' : 'default';
     });
+    updateCards();
     root.alpha = isEnabled ? 1 : 0.45;
   };
 
@@ -124,11 +134,25 @@ export const createBetSelector = (onSelect: () => void): BetSelector => {
     updateCards();
   };
 
+  const setMaxBet = (balance: number): void => {
+    maxBet = balance;
+    // Auto-downgrade selection to the highest affordable bet
+    if (!allInActive && OPTIONS[selectedIndex].bet > maxBet) {
+      const best = OPTIONS.reduce<number | null>(
+        (prev, opt, i) => (opt.bet <= maxBet ? i : prev),
+        null,
+      );
+      if (best !== null) selectedIndex = best;
+    }
+    updateCards();
+  };
+
   return {
     root,
     getBet: () => OPTIONS[selectedIndex].bet,
     setEnabled,
     setAllIn,
+    setMaxBet,
     width: BET_SELECTOR_WIDTH,
     height: CARD_H,
   };

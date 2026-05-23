@@ -28,6 +28,7 @@ export type LobbySettings = {
 
 export type LobbyScreen = {
   root: Container;
+  destroy: () => void;
 };
 
 type Chip = { root: Container; setActive: (a: boolean) => void };
@@ -179,6 +180,7 @@ export const createLobbyScreen = (
 
   let curY = PAD;
 
+  // Title
   const titleTxt = new Text({ text: STRINGS.header.title, style: STYLES.headerTitle });
   titleTxt.anchor.set(0.5, 0);
   titleTxt.x = PANEL_W / 2;
@@ -186,24 +188,30 @@ export const createLobbyScreen = (
   panel.addChild(titleTxt);
   curY += Math.round(titleTxt.height) + 12;
 
+  // Divider
   panel.addChild(new Graphics().rect(PAD, curY, INNER_W, 1).fill({ color: COLORS.hint }));
   curY += 1 + 20;
 
-  const creditRow = createChipRow(STRINGS.lobby.credit, [100, 500, 1000, 5000], 2, INNER_W);
-  creditRow.root.position.set(PAD, curY);
-  panel.addChild(creditRow.root);
-  curY += creditRow.height + SECTION_GAP;
+  // Credit label (HTML input will be positioned here)
+  const creditLabelTxt = new Text({ text: STRINGS.lobby.credit, style: STYLES.statLabel });
+  creditLabelTxt.position.set(PAD, curY);
+  panel.addChild(creditLabelTxt);
+  const creditInputOffsetY = curY + LABEL_H + LABEL_CHIP_GAP;
+  curY += LABEL_H + LABEL_CHIP_GAP + CHIP_H + SECTION_GAP;
 
+  // Reels row
   const reelsRow = createChipRow(STRINGS.lobby.reels, [3, 4, 5], 2, INNER_W);
   reelsRow.root.position.set(PAD, curY);
   panel.addChild(reelsRow.root);
   curY += reelsRow.height + SECTION_GAP;
 
+  // Rows row
   const rowsRow = createChipRow(STRINGS.lobby.rows, [2, 3, 4], 1, INNER_W);
   rowsRow.root.position.set(PAD, curY);
   panel.addChild(rowsRow.root);
   curY += rowsRow.height + SECTION_GAP;
 
+  // Bottom: sound toggle + play button
   const soundBtnW = Math.round(INNER_W * 0.38);
   const playBtnW = INNER_W - soundBtnW - CHIP_GAP;
 
@@ -222,16 +230,75 @@ export const createLobbyScreen = (
   panelBg.fill({ color: COLORS.white });
   panelBg.stroke({ color: COLORS.black, width: 3 });
 
-  panel.position.set(Math.round(screenW / 2 - PANEL_W / 2), Math.round(screenH / 2 - panelH / 2));
+  const panelX = Math.round(screenW / 2 - PANEL_W / 2);
+  const panelY = Math.round(screenH / 2 - panelH / 2);
+  panel.position.set(panelX, panelY);
+
+  // HTML input for credit (positioned over the canvas)
+  const creditInput = document.createElement('input');
+  creditInput.type = 'text';
+  creditInput.inputMode = 'numeric';
+  creditInput.pattern = '[0-9]*';
+  creditInput.maxLength = 6;
+  creditInput.value = '1000';
+  creditInput.placeholder = '100 – 999999';
+  Object.assign(creditInput.style, {
+    position: 'fixed',
+    left: `${panelX + PAD}px`,
+    top: `${panelY + creditInputOffsetY}px`,
+    width: `${INNER_W}px`,
+    height: `${CHIP_H}px`,
+    fontFamily: 'monospace',
+    fontSize: '15px',
+    fontWeight: 'bold',
+    color: COLORS.black,
+    background: COLORS.white,
+    border: `1.5px solid ${COLORS.hint}`,
+    borderRadius: '4px',
+    padding: '0 12px',
+    boxSizing: 'border-box',
+    outline: 'none',
+    zIndex: '10',
+  });
+  // Block non-digit keystrokes
+  creditInput.addEventListener('keydown', (e) => {
+    const nav = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (nav.includes(e.key) || e.ctrlKey || e.metaKey) return;
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+  });
+  // Strip any non-digits that slip through (e.g. paste)
+  creditInput.addEventListener('input', () => {
+    creditInput.value = creditInput.value.replace(/\D/g, '');
+  });
+  creditInput.addEventListener('focus', () => {
+    creditInput.style.borderColor = COLORS.black;
+  });
+  creditInput.addEventListener('blur', () => {
+    creditInput.style.borderColor = COLORS.hint;
+    const v = parseInt(creditInput.value, 10);
+    if (isNaN(v) || v < 1) creditInput.value = '100';
+    else if (v > 999_999) creditInput.value = '999999';
+  });
+  document.body.appendChild(creditInput);
+
+  const getCreditValue = (): number => {
+    const v = parseInt(creditInput.value, 10);
+    if (isNaN(v) || v < 1) return 100;
+    return Math.min(v, 999_999);
+  };
 
   playBtn.root.on('pointertap', () => {
     onPlay({
       reelCount: reelsRow.getValue(),
       rowCount: rowsRow.getValue(),
-      startingBalance: creditRow.getValue(),
+      startingBalance: getCreditValue(),
       muted: soundToggle.getMuted(),
     });
   });
 
-  return { root };
+  const destroy = (): void => {
+    creditInput.remove();
+  };
+
+  return { root, destroy };
 };
