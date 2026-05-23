@@ -24,6 +24,14 @@ export const STRINGS = {
     rowLabel: (n: number) => `ROW ${n}`,
     total: 'TOTAL',
   },
+  lobby: {
+    credit: 'STARTING CREDIT',
+    reels: 'REELS',
+    rows: 'ROWS',
+    play: 'PLAY',
+    soundOn: 'SOUND ON',
+    soundOff: 'SOUND OFF',
+  },
 } as const;
 
 export const TIER_LABEL: Record<WinTier, string> = {

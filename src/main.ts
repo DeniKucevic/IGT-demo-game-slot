@@ -2,10 +2,11 @@ import './style.css';
 import { initDevtools } from '@pixi/devtools';
 import { Application, Ticker } from 'pixi.js';
 
-import { DEFAULT_CONFIG, COLORS, computeLayout, STRINGS } from '@shared';
+import { COLORS, computeLayout, STRINGS } from '@shared';
+import type { GameConfig } from '@shared/config';
 
 import { loadAssets } from '@core/assets';
-import { createGameState, STARTING_BALANCE } from '@core/state';
+import { createGameState } from '@core/state';
 import { getResponseData } from '@server/api';
 
 import {
@@ -17,15 +18,14 @@ import {
   createGameOverScreen,
   createAllInButton,
   createTitleDisplay,
+  createLobbyScreen,
+  type LobbySettings,
   ALLIN_SIZE,
   BUTTON_HEIGHT,
 } from '@components';
 
 const HEADER_MID_Y = 24;
 const TITLE_ANIM_INTERVAL = 1500;
-
-// ── Game state ──
-const state = createGameState();
 
 // ── App ──
 const app = new Application();
@@ -38,17 +38,30 @@ await app.init({
 initDevtools({ app });
 document.getElementById('app')!.appendChild(app.canvas);
 
-await loadAssets();
+// ── Lobby + asset load (parallel) ──
+const settingsPromise = new Promise<LobbySettings>((resolve) => {
+  const lobby = createLobbyScreen(app.screen.width, app.screen.height, (s) => {
+    app.stage.removeChild(lobby.root);
+    resolve(s);
+  });
+  app.stage.addChild(lobby.root);
+});
+
+const [lobbySettings] = await Promise.all([settingsPromise, loadAssets()]);
+
+// ── Game state ──
+const config: GameConfig = { reelCount: lobbySettings.reelCount, rowCount: lobbySettings.rowCount };
+const state = createGameState(lobbySettings.startingBalance, lobbySettings.muted);
 
 // ── Layout ──
 const { symbolSize, reelW, reelsX, reelsY, controlsY } = computeLayout(
-  DEFAULT_CONFIG,
+  config,
   app.screen.width,
   app.screen.height,
 );
 
 // ── UI components ──
-const reelGroup = createReelGroup(DEFAULT_CONFIG, symbolSize);
+const reelGroup = createReelGroup(config, symbolSize);
 const spinButton = createSpinButton();
 const allInButton = createAllInButton();
 const betSelector = createBetSelector(() => deactivateAllIn());
@@ -111,7 +124,7 @@ const deactivateAllIn = (): void => {
 };
 
 const resetGame = (): void => {
-  state.balance = STARTING_BALANCE;
+  state.balance = state.startingBalance;
   state.spinCount = 0;
   balanceDisplay.setValue(state.balance);
   spinsDisplay.setValue(state.spinCount);
@@ -158,7 +171,7 @@ const runSpin = async (): Promise<void> => {
   reelGroup.spin();
 
   try {
-    const result = await getResponseData(DEFAULT_CONFIG);
+    const result = await getResponseData(config);
 
     reelGroup.land(result.reelPositions, () => {
       if (result.winningLines.length > 0) {

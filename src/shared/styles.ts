@@ -37,6 +37,14 @@ export const STYLES = {
     },
   }),
 
+  // Lobby chip selector
+  chipLabel: new TextStyle({
+    fontSize: 15,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    fill: COLORS.black,
+  }),
+
   // Bet selector cards
   cardName: new TextStyle({
     fontSize: 11,

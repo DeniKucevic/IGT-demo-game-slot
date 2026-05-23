@@ -23,7 +23,9 @@ export const createTitleDisplay = (label: string): TitleDisplay => {
 
   let currentX = 0;
   const spacing = STYLES.headerTitle.letterSpacing || 0;
-  const LETTER_HEIGHT = STYLES.headerTitle.fontSize ? Number(STYLES.headerTitle.fontSize) * 1.5 : 50;
+  const LETTER_HEIGHT = STYLES.headerTitle.fontSize
+    ? Number(STYLES.headerTitle.fontSize) * 1.5
+    : 50;
 
   for (let i = 0; i < label.length; i++) {
     const char = label[i];

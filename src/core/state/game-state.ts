@@ -8,12 +8,16 @@ export type AppState = {
   isAllIn: boolean;
   gameState: GameState;
   titleAnimationTime: number;
+  startingBalance: number;
+  muted: boolean;
 };
 
-export const createGameState = (): AppState => ({
-  balance: STARTING_BALANCE,
+export const createGameState = (startingBalance = STARTING_BALANCE, muted = false): AppState => ({
+  balance: startingBalance,
   spinCount: 0,
   isAllIn: false,
   gameState: 'idle',
   titleAnimationTime: 0,
+  startingBalance,
+  muted,
 });
