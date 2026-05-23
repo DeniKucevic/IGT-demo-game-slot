@@ -7,16 +7,21 @@ export const MIN_REELS = 3;
 export const MAX_REELS = 5;
 export const MIN_ROWS = 2;
 export const MAX_ROWS = 4;
+export const MIN_MATCH_COUNT = 2;
+// Gap between reels and between symbol rows
+// Symbol size scales with the window, gaps don't.
+export const REEL_GAP = 8;
+export const ROW_GAP = 8;
 
 export const SYMBOLS = [
-  "espresso",
-  "latte",
-  "cappuccino",
-  "mocha",
-  "nespresso",
-  "java", // I mean come on :D
-  "americano",
-  "turkish",
+  'espresso',
+  'latte',
+  'cappuccino',
+  'mocha',
+  'nespresso',
+  'java', // I mean come on :D
+  'americano',
+  'turkish',
 ];
 
 export const REEL_STRIPS: number[][] = [
@@ -32,9 +37,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   rowCount: 3,
 };
 
-export const BET_VALUES = [1, 5, 10, 25, 50, 100];
+export const BET_VALUES = [1, 5, 25, 100]; // TALL, GRANDE, VENTI, TRENTA
 
-// Gap between reels and between symbol rows
-// Symbol size scales with the window, gaps don't.
-export const REEL_GAP = 8;
-export const ROW_GAP = 8;
+export const SYMBOLS_PATH = '/assets/symbols';
+export const CUP_ASSET = '/assets/ui/cup.png';
+export const ALL_IN_ASSET = '/assets/ui/all-in.png';
