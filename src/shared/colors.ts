@@ -12,20 +12,25 @@ export const COLORS = {
   // reels
   maskFill: "#ffffff",
 
+  // win tiers
+  roast: "#e8922a",
+
   // ui
-  background: "#090918",
+  background: "#f5f0eb",
+  black: "#111111",
+  cream: "#f5f0eb",
+  kafePink: "#e8b4be",
   gold: "#ffd700",
-  panel: "#111128",
   white: "#ffffff",
-  hint: "#7777AA",
+  hint: "#888888",
 
   // buttons
-  btnFill: "#3311aa",
-  btnFillHover: "#5533bb",
-  btnFillDisabled: "#222240",
-  btnStroke: "#6644cc",
-  btnStrokeHover: "#aa88ff",
-  btnStrokeDisabled: "#333366",
+  btnFill: "#111111",
+  btnFillHover: "#333333",
+  btnFillDisabled: "#cccccc",
+  btnStroke: "#111111",
+  btnStrokeHover: "#111111",
+  btnStrokeDisabled: "#999999",
 
   // debug
   debugRed: "#ff0000",

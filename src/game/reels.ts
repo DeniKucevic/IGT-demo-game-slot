@@ -200,5 +200,13 @@ export const createReelGroup = (
     });
   };
 
-  return { root, spin, land, highlightWins, clearHighlights, width: viewW, height: viewH };
+  return {
+    root,
+    spin,
+    land,
+    highlightWins,
+    clearHighlights,
+    width: viewW,
+    height: viewH,
+  };
 };

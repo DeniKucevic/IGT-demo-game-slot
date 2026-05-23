@@ -47,7 +47,7 @@ export const createSpinButton = (): SpinButton => {
 
   const draw = (hover: boolean): void => {
     bg.clear();
-    bg.roundRect(0, 0, BTN_WIDTH, BTN_HEIGHT, 12);
+    bg.roundRect(0, 0, BTN_WIDTH, BTN_HEIGHT, 4);
     if (!enabled) {
       bg.fill({ color: COLORS.btnFillDisabled });
       bg.stroke({ color: COLORS.btnStrokeDisabled, width: 2 });

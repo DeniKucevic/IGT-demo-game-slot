@@ -11,6 +11,7 @@ import { COLORS } from "./shared/colors";
 import { createReelGroup } from "./game/reels";
 import { getResponseData } from "./server/api";
 import { createSpinButton } from "./ui/spin-button";
+import { createWinPopup } from "./ui/win-popup";
 
 const HEADER_H = 48;
 const FOOTER_H = 108;
@@ -64,16 +65,16 @@ const { symbolSize, reelW, reelH, reelsX, reelsY, controlsY } = computeLayout(
 );
 
 //  Debug overlay (TODO: remove)
-const debug = new Graphics();
-debug.rect(reelsX, reelsY, reelW, reelH);
-debug.stroke({ color: COLORS.debugRed, width: 2 });
-debug.rect(0, 0, app.screen.width, HEADER_H);
-debug.stroke({ color: COLORS.debugBlue, width: 2 });
-debug.rect(0, app.screen.height - FOOTER_H, app.screen.width, FOOTER_H);
-debug.stroke({ color: COLORS.debugGreen, width: 2 });
-debug.circle(app.screen.width / 2, controlsY, 6);
-debug.stroke({ color: COLORS.debugYellow, width: 2 });
-app.stage.addChild(debug);
+// const debug = new Graphics();
+// debug.rect(reelsX, reelsY, reelW, reelH);
+// debug.stroke({ color: COLORS.debugRed, width: 2 });
+// debug.rect(0, 0, app.screen.width, HEADER_H);
+// debug.stroke({ color: COLORS.debugBlue, width: 2 });
+// debug.rect(0, app.screen.height - FOOTER_H, app.screen.width, FOOTER_H);
+// debug.stroke({ color: COLORS.debugGreen, width: 2 });
+// debug.circle(app.screen.width / 2, controlsY, 6);
+// debug.stroke({ color: COLORS.debugYellow, width: 2 });
+// app.stage.addChild(debug);
 
 // ── Reels ──
 const reelGroup = createReelGroup(DEFAULT_CONFIG, symbolSize);
@@ -86,6 +87,10 @@ const spinButton = createSpinButton();
 spinButton.root.x = reelsX + reelW / 2 - spinButton.width / 2;
 spinButton.root.y = controlsY;
 app.stage.addChild(spinButton.root);
+
+// ── Win popup ──
+const winPopup = createWinPopup(app.screen.width, app.screen.height);
+app.stage.addChild(winPopup.root);
 
 // ── Game loop ──
 let spinning = false;
@@ -100,10 +105,15 @@ const runSpin = (): void => {
   reelGroup.land(result.reelPositions, () => {
     if (result.winningLines.length > 0) {
       reelGroup.highlightWins(result.winningLines);
+      winPopup.show(result.winningLines, result.prize, () => {
+        reelGroup.clearHighlights();
+        spinning = false;
+        spinButton.setEnabled(true);
+      });
+    } else {
+      spinning = false;
+      spinButton.setEnabled(true);
     }
-    console.log("result:", result.winningLines, result.prize);
-    spinning = false;
-    spinButton.setEnabled(true);
   });
 };
 

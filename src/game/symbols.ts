@@ -37,12 +37,11 @@ export const createSymbolSlot = (symbolSize: number): SymbolSlot => {
 
   const setSymbol = (symbolIndex: number): void => {
     background.clear();
-    background.roundRect(2, 2, symbolSize - 4, symbolSize - 4, 12);
+    background.roundRect(2, 2, symbolSize - 4, symbolSize - 4, 4);
     background.fill({
       color: SYMBOL_COLORS[symbolIndex % SYMBOL_COLORS.length],
-      alpha: 0.85,
     });
-    background.stroke({ color: COLORS.white, alpha: 0.3, width: 2 });
+    background.stroke({ color: COLORS.black, width: 2 });
     sprite.texture = Texture.from(SYMBOLS[symbolIndex]);
   };
 
@@ -60,10 +59,10 @@ export const createSymbolSlot = (symbolSize: number): SymbolSlot => {
       highlightTime = 0;
       highlightTicker = (t: Ticker) => {
         highlightTime += t.deltaMS;
-        const alpha = 0.55 + 0.45 * Math.sin(highlightTime / 280);
+        const alpha = 0.6 + 0.4 * Math.sin(highlightTime / 280);
         glowOverlay.clear();
-        glowOverlay.roundRect(1, 1, symbolSize - 2, symbolSize - 2, 13);
-        glowOverlay.stroke({ color: COLORS.gold, alpha, width: 5 });
+        glowOverlay.roundRect(1, 1, symbolSize - 2, symbolSize - 2, 5);
+        glowOverlay.stroke({ color: COLORS.gold, alpha, width: 6 });
       };
       Ticker.shared.add(highlightTicker);
     }

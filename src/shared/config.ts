@@ -35,6 +35,6 @@ export const DEFAULT_CONFIG: GameConfig = {
 export const BET_VALUES = [1, 5, 10, 25, 50, 100];
 
 // Gap between reels and between symbol rows
-// Symbol size scales with the window; gaps don't.
+// Symbol size scales with the window, gaps don't.
 export const REEL_GAP = 8;
 export const ROW_GAP = 8;
