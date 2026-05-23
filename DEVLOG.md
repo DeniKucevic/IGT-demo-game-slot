@@ -1,4 +1,4 @@
-# Dev Log — IGT Slot Demo 🎰
+# Dev Log - IGT Slot Demo 🎰
 
 _CODENAME: SSGD (Simple Slot Game Demo)_
 
@@ -8,23 +8,23 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 ## CORE FEATURES
 
-- [ ] **Bet selector** — combo box (be creative, fit the game, show dev skills)
-- [ ] **Reels component (5x3 — or configurable)**
+- [ ] **Bet selector** - combo box (be creative, fit the game, show dev skills)
+- [ ] **Reels component (5x3 - or configurable)**
   - [ ] Start spinning, spinning, stop spinning
   - [ ] Speed up, slow down, bounce (free look and feel)
-- [ ] **Win display** — animated/highlighted win symbols, win value shown (free look and feel)
-- [ ] **Mocked server** — separate class/module, returns JSON with stop positions, winning lines, prize info
+- [ ] **Win display** - animated/highlighted win symbols, win value shown (free look and feel)
+- [ ] **Mocked server** - separate class/module, returns JSON with stop positions, winning lines, prize info
   ```js
   mockedServer.getResponseData(); // returns result as JSON
   ```
 
 ---
 
-## Day 1 — 2026-05-19 | Setup & Research
+## Day 1 - 2026-05-19 | Setup & Research
 
 ## TASKS FOR TODAY
 
-- [x] **RESEARCH** — How do slot machines work in depth
+- [x] **RESEARCH** - How do slot machines work in depth
 - [x] **SETUP**
   - [x] Repo, structure, documents, requrements
   - [x] "Server" and front-end
@@ -37,15 +37,15 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 ### Decisions & reasoning
 
-- **Both reelCount and rowCount are configurable** — the brief says "5x3 or configurable" but doesn't specify which dimension. Making both configurable shows better architecture and is more aligned with how real slot games work. Default remains 5x3.
-- **Winning lines are dynamically generated based on grid size** — instead of hardcoding 3 horizontal lines, winning lines are calculated from the current rowCount. A 5x4 grid automatically gets 4 horizontal lines. Diagonals are a bonus.
-- **Functional modules over classes** — exported functions only, no classes. Cleaner, more modern TypeScript.
-- **Vite + TypeScript + PixiJS v7** — Vite for fast dev server, PixiJS v7 for stable Canvas/WebGL rendering, TypeScript for type safety.
-- **MockedServer is completely isolated** — accepts GameConfig, randomly generates reel positions, calculates wins internally, returns typed JSON. No win logic leaks into game code.
+- **Both reelCount and rowCount are configurable** - the brief says "5x3 or configurable" but doesn't specify which dimension. Making both configurable shows better architecture and is more aligned with how real slot games work. Default remains 5x3.
+- **Winning lines are dynamically generated based on grid size** - instead of hardcoding 3 horizontal lines, winning lines are calculated from the current rowCount. A 5x4 grid automatically gets 4 horizontal lines. Diagonals are a bonus.
+- **Functional modules over classes** - exported functions only, no classes. Cleaner, more modern TypeScript.
+- **Vite + TypeScript + PixiJS v7** - Vite for fast dev server, PixiJS v7 for stable Canvas/WebGL rendering, TypeScript for type safety.
+- **MockedServer is completely isolated** - accepts GameConfig, randomly generates reel positions, calculates wins internally, returns typed JSON. No win logic leaks into game code.
 
 ### Problems & solutions
 
-- N/A — research day
+- N/A - research day
 - _No hard coded data_ - I do not want hard coded string, the game should be data driven. I think I will create a landing page before the game starts where we can configure the game parameters (reels, symbols, etc....)
 - _Everything is set up from the game_ - There should be no changes made "trough code" and all should be configurable during "run-time"
 
@@ -55,7 +55,7 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 ---
 
-## Day 2 — 2026-05-20 | Simple game & gameplay
+## Day 2 - 2026-05-20 | Simple game & gameplay
 
 ## TASKS FOR TODAY
 
@@ -73,12 +73,12 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 ### Decisions & reasoning
 
-- **Scaffolding** — initiated the project, created basic folder structure
-- **Core features and design** — I dropped a 3d animations with threejs so I have less overhead to fight. I want to do designs that are similar to the Kafeterija app and I want coffee to be used for sprites
+- **Scaffolding** - initiated the project, created basic folder structure
+- **Core features and design** - I dropped a 3d animations with threejs so I have less overhead to fight. I want to do designs that are similar to the Kafeterija app and I want coffee to be used for sprites
 
 ### Problems & solutions
 
-- N/A — research day
+- N/A - research day
 
 ### Next up
 
@@ -86,7 +86,7 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 ---
 
-## Day 3 — 2026-05-21 | Basic game
+## Day 3 - 2026-05-21 | Basic game
 
 ## TASKS FOR TODAY
 
@@ -106,19 +106,19 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 - **Pre-built strip over texture swapping** - the official PixiJS slot example swaps textures on a short looping strip. Since the spec requires server predetermined stop positions a pre-built long strip (80 symbols, 10 repetitions) allows calculating an exact landing coordinate before animation starts. Landing is mathematically guaranteed regardless of frame rate.
 
-- **Easings functions** — https://easings.net/# was a great resource for the spin requirements (speed up, slow down and bounce).
+- **Easings functions** - https://easings.net/# was a great resource for the spin requirements (speed up, slow down and bounce).
 
-- **Central color palette** — all colors defined in colors.ts with semantic names. No hex values scattered through component files.
+- **Central color palette** - all colors defined in colors.ts with semantic names. No hex values scattered through component files.
 
 ### Problems & solutions
 
-- Images loading with wrong paths — assets were in public/ root but code used /symbols/ prefix. Fixed paths in Assets.load.
+- Images loading with wrong paths - assets were in public/ root but code used /symbols/ prefix. Fixed paths in Assets.load.
 
-- Symbol name mismatch — SYMBOLS array had 'java' but image file was beans.png. Renamed to match.
+- Symbol name mismatch - SYMBOLS array had 'java' but image file was beans.png. Renamed to match.
 
-- Text rendering over sprites — old emoji Text label was left in symbols.ts alongside new Sprite. Removed the text entirely.
+- Text rendering over sprites - old emoji Text label was left in symbols.ts alongside new Sprite. Removed the text entirely.
 
--Mask fill color confusion — PixiJS mask uses shape only, fill color is irrelevant and never rendered. Removed maskFill from colors, hardcoded white directly.
+- Mask fill color confusion - PixiJS mask uses shape only, fill color is irrelevant and never rendered. Removed maskFill from colors, hardcoded white directly.
 
 ### Next up
 
@@ -128,16 +128,16 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 ---
 
-## Day 4 — 2026-05-22 | Server, game loop & controls
+## Day 4 - 2026-05-22 | Server, game loop & controls
 
 ## TASKS FOR TODAY
 
 - [x] **Mocked server** - getResponseData() returns stop positions, winning lines, prize as JSON
-- [x] **Win evaluation** — evaluateLines(), left-to-right consecutive match?, ratio-based tier?
-- [x] **Spin button** — triggers spin, disabled during animation
-- [ ] **Bet selector** — dropdown?
-- [x] **Game loop** — balance, spin count, state machine (idle → spinning → idle)
-- [x] **Wire it all together** — server result drives reel stop positions, prize shown after stop
+- [x] **Win evaluation** - evaluateLines(), left-to-right consecutive match?, ratio-based tier?
+- [x] **Spin button** - triggers spin, disabled during animation
+- [ ] **Bet selector** - dropdown?
+- [x] **Game loop** - balance, spin count, state machine (idle → spinning → idle)
+- [x] **Wire it all together** - server result drives reel stop positions, prize shown after stop
 
 ### What I did
 
@@ -150,20 +150,50 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 - **Virtual scroll over long strip** - If I kept the original idea there was a problem that if this was in prodaction and server halted the response we could run out of strip and UI would break, if this was waiting for a response from server. If we do it like pixi.js example we can keep the spin phase as long as we want. I mean not a final solution but still better then broken UI.
 
-- **REEL_STRIPS in config.ts** — hard coded the reels, might come back and update later so it is generated by "server" and passed to FE so that they are in sync. Let's focus on what is required first.
+- **REEL_STRIPS in config.ts** - hard coded the reels, might come back and update later so it is generated by "server" and passed to FE so that they are in sync. Let's focus on what is required first.
 
 ### Problems & solutions
 
-- Reels couldn't spin indefinitely — long strip has a fixed end. Virtual scroll has no end; position grows unbounded and modulo handles wrapping.
+- Reels couldn't spin indefinitely - long strip has a fixed end. Virtual scroll has no end; position grows unbounded and modulo handles wrapping.
 
-- Server and client strip out of sync — shuffleForReel was duplicated. Removed both copies, replaced with REEL_STRIPS imported from config in both modules.
+- Server and client strip out of sync - shuffleForReel was duplicated. Removed both copies, replaced with REEL_STRIPS imported from config in both modules.
 
-- All slots rendering at y=0 on load — Moved definition before the loop.
+- All slots rendering at y=0 on load - Moved definition before the loop.
 
 ### Next up
 
 - Bet selector (dropdown/combo box)
 - Balance display and spin counter in header
 - Config screen (reel/row count stepper)
+
+---
+
+Day 5 - 2026-05-23 | Bet selector & other UI elements
+
+## TASKS FOR TODAY
+
+- [ ] **Bet selector** - getResponseData() returns stop positions, winning lines, prize as JSON
+- [ ] **Number of spins** - evaluateLines(), left-to-right consecutive match?, ratio-based tier?
+- [ ] **Balance?** - triggers spin, disabled during animation
+- [ ] **Project structure** - review the current structure
+- [ ] **Testing**
+
+### What I did
+
+- There was a bug where the position number could grow out of hand during a very long gameplay, we reset the position to the actual position of the reel so the number is allways small
+- Since we are mocking the server we should also think about issues that come with it, for example we need a response from server to know the status of the win or not, in case that response does not come we need a solution so a random no-win position makes sense to me. This is enough for demo even tho in production this would need more cases and probably some failsafe so the players (I am already adapting to lingo and saying players instead of useds :D) are not stuck forever in that loop. Maybe like if we get no response in 4 spins we show some error screen?
+- T
+
+### Decisions & reasoning
+
+- **Virtual scroll over long strip** - If I kept the original idea there was a problem that if this was in prodaction and server halted the response we could run out of strip and UI would break, if this was waiting for a response from server. If we do it like pixi.js example we can keep the spin phase as long as we want. I mean not a final solution but still better then broken UI.
+
+### Problems & solutions
+
+- Reels couldn't spin indefinitely - long strip has a fixed end. Virtual scroll has no end; position grows unbounded and modulo handles wrapping.
+
+### Next up
+
+- Bet selector (dropdown/combo box)
 
 ---
