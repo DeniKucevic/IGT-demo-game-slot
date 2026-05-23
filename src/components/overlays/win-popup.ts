@@ -1,14 +1,13 @@
-import { Container, Graphics, Text, TextStyle, Ticker } from "pixi.js";
-import { COLORS } from "../shared/colors";
-import type { WinLine, WinTier } from "../shared/types";
-import { TIER_LABEL, TIER_PRIZE_MULT } from "../shared/types";
+import { Container, Graphics, Text, Ticker } from 'pixi.js';
+
+import { COLORS, STRINGS, STYLES, TIER_LABEL, TIER_PRIZE_MULT } from '../../shared';
+import type { WinLine, WinTier } from '../../shared/types';
 
 const POPUP_W = 380;
-const HEADER_H = 58; // cup icon + divider
-const LINE_H = 30; // height per win-line row
-const FOOTER_H = 56; // total divider + total row + padding
+const HEADER_H = 58;
+const LINE_H = 30;
+const FOOTER_H = 56;
 
-// Tier accent colors
 const TIER_ACCENT: Record<WinTier, string> = {
   small: COLORS.kafePink,
   win: COLORS.latte,
@@ -23,16 +22,15 @@ const TIER_BORDER_W: Record<WinTier, number> = {
   jackpot: 4,
 };
 
-const TIER_ORDER: WinTier[] = ["small", "win", "bigwin", "jackpot"];
+const TIER_ORDER: WinTier[] = ['small', 'win', 'bigwin', 'jackpot'];
 
 const getTopTier = (lines: WinLine[]): WinTier =>
   lines.reduce<WinTier>(
-    (best, l) =>
-      TIER_ORDER.indexOf(l.tier) > TIER_ORDER.indexOf(best) ? l.tier : best,
+    (best, l) => (TIER_ORDER.indexOf(l.tier) > TIER_ORDER.indexOf(best) ? l.tier : best),
     lines[0].tier,
   );
 
-type PopupPhase = "in" | "hold" | "out" | "idle";
+type PopupPhase = 'in' | 'hold' | 'out' | 'idle';
 
 const IN_DURATION = 420;
 const HOLD_DURATION = 2200;
@@ -57,9 +55,9 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
 
   const overlay = new Graphics();
   overlay.rect(0, 0, screenW, screenH);
-  overlay.fill({ color: "#000000", alpha: 0.5 });
-  overlay.eventMode = "static";
-  overlay.cursor = "pointer";
+  overlay.fill({ color: '#000000', alpha: 0.5 });
+  overlay.eventMode = 'static';
+  overlay.cursor = 'pointer';
   root.addChild(overlay);
 
   const panel = new Container();
@@ -70,38 +68,31 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
   const bg = new Graphics();
   panel.addChild(bg);
 
-  // Holds dynamic text nodes
   let dynamicNodes: Text[] = [];
-
-  let phase: PopupPhase = "idle";
+  let phase: PopupPhase = 'idle';
   let elapsed = 0;
   let onDoneCallback: (() => void) | null = null;
   let tickerFn: ((t: Ticker) => void) | null = null;
 
   const skip = (): void => {
-    if (phase === "hold") {
-      phase = "out";
+    if (phase === 'hold') {
+      phase = 'out';
       elapsed = 0;
     }
   };
 
   const onKeyDown = (e: KeyboardEvent): void => {
-    if (e.code === "Space") skip();
+    if (e.code === 'Space') skip();
   };
 
-  overlay.on("pointertap", skip);
+  overlay.on('pointertap', skip);
 
-  const show = (
-    winLines: WinLine[],
-    prize: number,
-    onDone: () => void,
-  ): void => {
+  const show = (winLines: WinLine[], prize: number, onDone: () => void): void => {
     if (tickerFn) {
       Ticker.shared.remove(tickerFn);
       tickerFn = null;
     }
 
-    // Tear down previous content
     dynamicNodes.forEach((n) => {
       panel.removeChild(n);
       n.destroy();
@@ -113,30 +104,18 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
     const popupH = HEADER_H + winLines.length * LINE_H + FOOTER_H;
     const halfH = popupH / 2;
 
-    // Background
     bg.clear();
     bg.roundRect(-POPUP_W / 2, -halfH, POPUP_W, popupH, 4);
     bg.fill({ color: COLORS.white });
     bg.stroke({ color: COLORS.black, width: TIER_BORDER_W[topTier] });
-
-    // Header divider
     bg.moveTo(-POPUP_W / 2 + 28, -halfH + HEADER_H);
     bg.lineTo(POPUP_W / 2 - 28, -halfH + HEADER_H);
     bg.stroke({ color: COLORS.black, alpha: 0.12, width: 1 });
-
-    // Footer divider
     bg.moveTo(-POPUP_W / 2 + 28, halfH - FOOTER_H);
     bg.lineTo(POPUP_W / 2 - 28, halfH - FOOTER_H);
     bg.stroke({ color: COLORS.black, alpha: 0.12, width: 1 });
 
-    // Cup icon
-    const add = (
-      t: Text,
-      x: number,
-      y: number,
-      anchorX: number,
-      anchorY = 0.5,
-    ): Text => {
+    const add = (t: Text, x: number, y: number, anchorX: number, anchorY = 0.5): Text => {
       t.position.set(x, y);
       t.anchor.set(anchorX, anchorY);
       panel.addChild(t);
@@ -144,60 +123,33 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
       return t;
     };
 
-    add(
-      new Text({
-        text: "☕",
-        style: new TextStyle({ fontSize: 22, fontFamily: "monospace" }),
-      }),
-      0,
-      -halfH + 28,
-      0.5,
-    );
+    add(new Text({ text: STRINGS.winPopup.emoji, style: STYLES.popupEmoji }), 0, -halfH + 28, 0.5);
 
-    // Win lines
     const lineStartY = -halfH + HEADER_H + LINE_H / 2 + 2;
-
     winLines.forEach((line, i) => {
       const y = lineStartY + i * LINE_H;
-
       add(
         new Text({
-          text: `ROW ${line.row + 1}`,
-          style: new TextStyle({
-            fontSize: 13,
-            fontFamily: "monospace",
-            fill: COLORS.hint,
-          }),
+          text: STRINGS.winPopup.rowLabel(line.row + 1),
+          style: STYLES.popupRow,
         }),
         -POPUP_W / 2 + 28,
         y,
         0,
       );
-
       add(
         new Text({
           text: TIER_LABEL[line.tier],
-          style: new TextStyle({
-            fontSize: 13,
-            fontWeight: "bold",
-            fontFamily: "monospace",
-            fill: TIER_ACCENT[line.tier],
-            letterSpacing: 2,
-          }),
+          style: STYLES.popupTier(TIER_ACCENT[line.tier]),
         }),
         0,
         y,
         0.5,
       );
-
       add(
         new Text({
           text: `+${TIER_PRIZE_MULT[line.tier]}×`,
-          style: new TextStyle({
-            fontSize: 13,
-            fontFamily: "monospace",
-            fill: COLORS.black,
-          }),
+          style: STYLES.popupMult,
         }),
         POPUP_W / 2 - 28,
         y,
@@ -205,65 +157,44 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
       );
     });
 
-    // Total
     const totalY = halfH - FOOTER_H / 2;
-
     add(
-      new Text({
-        text: "TOTAL",
-        style: new TextStyle({
-          fontSize: 13,
-          fontFamily: "monospace",
-          fill: COLORS.hint,
-        }),
-      }),
+      new Text({ text: STRINGS.winPopup.total, style: STYLES.popupRow }),
       -POPUP_W / 2 + 28,
       totalY,
       0,
     );
-
     add(
-      new Text({
-        text: `+${prize}×`,
-        style: new TextStyle({
-          fontSize: 20,
-          fontWeight: "bold",
-          fontFamily: "monospace",
-          fill: accent,
-          letterSpacing: 2,
-        }),
-      }),
+      new Text({ text: `+${prize}×`, style: STYLES.popupTotal(accent) }),
       POPUP_W / 2 - 28,
       totalY,
       1,
     );
 
-    // Animate in
     onDoneCallback = onDone;
     panel.scale.set(0);
     panel.alpha = 1;
     root.visible = true;
-    phase = "in";
+    phase = 'in';
     elapsed = 0;
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
 
     tickerFn = (t: Ticker) => {
       elapsed += t.deltaMS;
-
-      if (phase === "in") {
+      if (phase === 'in') {
         const p = Math.min(elapsed / IN_DURATION, 1);
         panel.scale.set(easeOutBounce(p));
         if (p >= 1) {
           panel.scale.set(1);
-          phase = "hold";
+          phase = 'hold';
           elapsed = 0;
         }
-      } else if (phase === "hold") {
+      } else if (phase === 'hold') {
         if (elapsed >= HOLD_DURATION) {
-          phase = "out";
+          phase = 'out';
           elapsed = 0;
         }
-      } else if (phase === "out") {
+      } else if (phase === 'out') {
         const p = Math.min(elapsed / OUT_DURATION, 1);
         panel.scale.set(1 - p * 0.15);
         panel.alpha = 1 - p;
@@ -271,15 +202,14 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
           root.visible = false;
           panel.alpha = 1;
           panel.scale.set(1);
-          phase = "idle";
-          window.removeEventListener("keydown", onKeyDown);
+          phase = 'idle';
+          window.removeEventListener('keydown', onKeyDown);
           Ticker.shared.remove(tickerFn!);
           tickerFn = null;
           onDoneCallback?.();
         }
       }
     };
-
     Ticker.shared.add(tickerFn);
   };
 

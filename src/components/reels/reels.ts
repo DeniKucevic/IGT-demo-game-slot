@@ -1,11 +1,11 @@
-import { Container, Graphics } from "pixi.js";
-import type { GameConfig } from "../shared/config";
-import { REEL_GAP, REEL_STRIPS, ROW_GAP } from "../shared/config";
-import { COLORS } from "../shared/colors";
-import type { WinLine } from "../shared/types";
-import { createReel } from "./reel";
+import { Container, Graphics } from 'pixi.js';
 
-const REEL_STOP_DELAY = 320;
+import { COLORS } from '../../shared';
+import type { GameConfig } from '../../shared/config';
+import { REEL_GAP, REEL_STRIPS, ROW_GAP } from '../../shared/config';
+import type { WinLine } from '../../shared/types';
+
+import { createReel } from './reel';
 
 const generateFailsafePositions = (rowCount: number): number[] => {
   const pos0 = Math.floor(Math.random() * REEL_STRIPS[0].length);
@@ -23,7 +23,6 @@ const generateFailsafePositions = (rowCount: number): number[] => {
     );
 
   const pos1 = valid1[Math.floor(Math.random() * valid1.length)] ?? 0;
-
   return REEL_STRIPS.map((strip, i) =>
     i === 0 ? pos0 : i === 1 ? pos1 : Math.floor(Math.random() * strip.length),
   );
@@ -39,10 +38,7 @@ export type ReelGroup = {
   height: number;
 };
 
-export const createReelGroup = (
-  config: GameConfig,
-  symbolSize: number,
-): ReelGroup => {
+export const createReelGroup = (config: GameConfig, symbolSize: number): ReelGroup => {
   const { reelCount, rowCount } = config;
   const symbolStep = symbolSize + ROW_GAP;
   const viewH = rowCount * symbolStep - ROW_GAP;
@@ -65,7 +61,7 @@ export const createReelGroup = (
 
   const land = (stopPositions: number[], onAllStopped: () => void): void => {
     allStoppedCallback = onAllStopped;
-    reels.forEach((reel, i) => reel.land(stopPositions[i]));
+    reels.forEach((reel, reelIndex) => reel.land(stopPositions[reelIndex]));
   };
 
   const spin = (onReelStopped?: (reelIndex: number) => void): void => {
@@ -74,29 +70,32 @@ export const createReelGroup = (
     const failsafePositions = generateFailsafePositions(rowCount);
 
     reels.forEach((reel, reelIndex) => {
-      setTimeout(() => {
-        reel.spin(failsafePositions[reelIndex], () => {
-          stoppedCount++;
-          onReelStopped?.(reelIndex);
-          if (stoppedCount === reelCount) {
-            allStoppedCallback?.();
-          }
-        });
-      }, reelIndex * REEL_STOP_DELAY);
+      reel.spin(failsafePositions[reelIndex], () => {
+        stoppedCount++;
+        onReelStopped?.(reelIndex);
+        if (stoppedCount === reelCount) allStoppedCallback?.();
+      });
     });
   };
 
   const highlightWins = (winLines: WinLine[]): void => {
     winLines.forEach(({ row, matchCount }) => {
-      for (let reelIndex = 0; reelIndex < matchCount; reelIndex++) {
+      for (let reelIndex = 0; reelIndex < matchCount; reelIndex++)
         reels[reelIndex].highlightRow(row, true);
-      }
     });
   };
 
   const clearHighlights = (): void => {
-    reels.forEach((reel) => reel.clearHighlights());
+    reels.forEach((r) => r.clearHighlights());
   };
 
-  return { root, spin, land, highlightWins, clearHighlights, width: viewW, height: viewH };
+  return {
+    root,
+    spin,
+    land,
+    highlightWins,
+    clearHighlights,
+    width: viewW,
+    height: viewH,
+  };
 };

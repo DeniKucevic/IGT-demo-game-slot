@@ -1,22 +1,27 @@
-import { Container, Ticker } from "pixi.js";
-import { REEL_STRIPS, ROW_GAP } from "../shared/config";
-import { createSymbolSlot } from "./symbols";
+import { Container, Ticker } from 'pixi.js';
+
+import { REEL_STRIPS, ROW_GAP } from '../../shared/config';
+
+import { createSymbolSlot } from './symbols';
 
 const ACCEL_DURATION = 400;
 const MIN_SPIN_DURATION = 700;
 const DECEL_DURATION = 480;
 const FAILSAFE_TIMEOUT = 5000;
 const BASE_MAX_SPEED = 2.6;
+const STOP_STAGGER = 500;
 
-type ReelPhase = "idle" | "accel" | "spin" | "decel" | "done";
+type ReelPhase = 'idle' | 'accel' | 'spin' | 'decel' | 'done';
 
 type ReelState = {
   phase: ReelPhase;
   elapsed: number;
+  totalElapsed: number;
   position: number;
   startPos: number;
   targetPos: number;
   pendingStopIndex: number | null;
+  decelTargetTime: number | null;
 };
 
 export type Reel = {
@@ -37,11 +42,7 @@ const easeOutBounce = (t: number): number => {
   return 1.04 - 0.04 * ((t - 0.75) / 0.25);
 };
 
-export const createReel = (
-  reelIndex: number,
-  symbolSize: number,
-  rowCount: number,
-): Reel => {
+export const createReel = (reelIndex: number, symbolSize: number, rowCount: number): Reel => {
   const strip = REEL_STRIPS[reelIndex];
   const symbolStep = symbolSize + ROW_GAP;
   const SLOT_COUNT = rowCount + 2;
@@ -57,12 +58,14 @@ export const createReel = (
   });
 
   const state: ReelState = {
-    phase: "idle",
+    phase: 'idle',
     elapsed: 0,
+    totalElapsed: 0,
     position: 0,
     startPos: 0,
     targetPos: 0,
     pendingStopIndex: null,
+    decelTargetTime: null,
   };
 
   const updateSlots = (): void => {
@@ -71,9 +74,7 @@ export const createReel = (
     for (let i = 0; i < SLOT_COUNT; i++) {
       slots[i].container.y = (i - 1 - scrollFraction) * symbolStep;
       const symbolIndex =
-        strip[
-          (((stripIndex - 1 + i) % strip.length) + strip.length) % strip.length
-        ];
+        strip[(((stripIndex - 1 + i) % strip.length) + strip.length) % strip.length];
       slots[i].setSymbol(symbolIndex);
     }
   };
@@ -82,58 +83,65 @@ export const createReel = (
 
   const land = (stopIndex: number): void => {
     state.pendingStopIndex = stopIndex;
+    const minRequiredTime = ACCEL_DURATION + MIN_SPIN_DURATION;
+    state.decelTargetTime =
+      Math.max(state.totalElapsed, minRequiredTime) + reelIndex * STOP_STAGGER;
   };
 
   const spin = (failsafePos: number, onStopped: () => void): void => {
-    state.phase = "accel";
+    state.phase = 'accel';
     state.elapsed = 0;
+    state.totalElapsed = 0;
+    state.pendingStopIndex = null;
+    state.decelTargetTime = null;
 
     const sharedTicker = Ticker.shared;
 
     const onTick = (ticker: Ticker): void => {
       const dt = ticker.deltaMS;
       state.elapsed += dt;
+      state.totalElapsed += dt;
 
-      if (state.phase === "accel") {
+      if (state.phase === 'accel') {
         const progress = Math.min(state.elapsed / ACCEL_DURATION, 1);
         state.position += maxSpeed * easeIn(progress) * dt;
         if (progress >= 1) {
-          state.phase = "spin";
+          state.phase = 'spin';
           state.elapsed = 0;
         }
-      } else if (state.phase === "spin") {
+      } else if (state.phase === 'spin') {
         state.position += maxSpeed * dt;
 
-        if (state.pendingStopIndex === null && state.elapsed >= FAILSAFE_TIMEOUT) {
+        if (state.pendingStopIndex === null && state.totalElapsed >= FAILSAFE_TIMEOUT) {
           state.pendingStopIndex = failsafePos;
+          state.decelTargetTime = state.totalElapsed + reelIndex * STOP_STAGGER; // Čuva ritam i na pucanju neta
         }
 
-        if (state.pendingStopIndex !== null && state.elapsed >= MIN_SPIN_DURATION) {
+        if (
+          state.pendingStopIndex !== null &&
+          state.decelTargetTime !== null &&
+          state.totalElapsed >= state.decelTargetTime
+        ) {
           const minDecelDistance = maxSpeed * DECEL_DURATION * 0.5;
           let targetPos = state.pendingStopIndex;
-          while (targetPos <= state.position + minDecelDistance)
-            targetPos += strip.length;
-
+          while (targetPos <= state.position + minDecelDistance) targetPos += strip.length;
           state.targetPos = targetPos;
           state.startPos = state.position;
-          state.phase = "decel";
+          state.phase = 'decel';
           state.elapsed = 0;
         }
-      } else if (state.phase === "decel") {
+      } else if (state.phase === 'decel') {
         const progress = Math.min(state.elapsed / DECEL_DURATION, 1);
         state.position =
-          state.startPos +
-          (state.targetPos - state.startPos) * easeOutBounce(progress);
-
+          state.startPos + (state.targetPos - state.startPos) * easeOutBounce(progress);
         if (state.elapsed >= DECEL_DURATION) {
           state.position = state.targetPos % strip.length;
           state.pendingStopIndex = null;
-          state.phase = "done";
+          state.phase = 'done';
           sharedTicker.remove(onTick);
           onStopped();
         }
       }
-
       updateSlots();
     };
 
@@ -143,9 +151,8 @@ export const createReel = (
   const highlightRow = (row: number, on: boolean): void => {
     slots[row + 1].highlight(on);
   };
-
   const clearHighlights = (): void => {
-    slots.forEach((slot) => slot.highlight(false));
+    slots.forEach((s) => s.highlight(false));
   };
 
   return { container, spin, land, highlightRow, clearHighlights };
