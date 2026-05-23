@@ -91,6 +91,10 @@ const runGame = async (): Promise<void> => {
     betSelector.setMaxBet(newBalance);
   };
 
+  // Placeholder — assigned after onKeyDown is defined so the real impl is ready
+  // before any listeners are registered.
+  let goToLobby: () => void = () => {};
+
   // ── Back button ──
   const backBtn = new Container();
   backBtn.eventMode = 'static';
@@ -168,22 +172,12 @@ const runGame = async (): Promise<void> => {
     betSelector.setAllIn(false);
   };
 
-  const resetGame = (): void => {
-    updateBalance(state.startingBalance);
-    state.spinCount = 0;
-    spinsDisplay.setValue(state.spinCount);
-    reelGroup.clearHighlights();
-    deactivateAllIn();
-    state.gameState = 'idle';
-    setControlsEnabled(true);
-    state.titleAnimationTime = 0;
-    Ticker.shared.add(updateTitleAnimation);
-  };
-
   const endRound = (): void => {
     reelGroup.clearHighlights();
+    // Normalize bet selector visual state regardless of outcome
+    betSelector.setAllIn(false);
     if (state.balance <= 0) {
-      gameOverScreen.show(resetGame);
+      gameOverScreen.show(goToLobby);
     } else {
       state.gameState = 'idle';
       setControlsEnabled(true);
@@ -208,7 +202,10 @@ const runGame = async (): Promise<void> => {
 
     spinsDisplay.setValue(state.spinCount);
     setControlsEnabled(false);
-    deactivateAllIn();
+    // Keep betSelector in all-in visual state during spin; endRound normalizes it
+    state.isAllIn = false;
+    allInButton.setActive(false);
+    spinButton.setAllIn(false);
 
     reelGroup.clearHighlights();
     reelGroup.spin();
@@ -241,27 +238,28 @@ const runGame = async (): Promise<void> => {
 
   spinButton.root.on('pointertap', runSpin);
 
-  // onKeyDown is defined before backBtn handler so both can reference it safely
+  // Define before assigning goToLobby so the impl can reference onKeyDown safely
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.code === 'Space') {
       e.preventDefault();
       runSpin();
     }
-    if (e.code === 'Escape' && state.gameState === 'idle') {
-      window.removeEventListener('keydown', onKeyDown);
-      Ticker.shared.remove(updateTitleAnimation);
-      scene.destroy({ children: true });
-      runGame();
-    }
+    if (e.code === 'Escape' && state.gameState === 'idle') goToLobby();
   };
-  window.addEventListener('keydown', onKeyDown);
 
-  backBtn.on('pointertap', () => {
-    if (state.gameState !== 'idle') return;
+  // Assign real impl now that onKeyDown is defined — registered listener comes after
+  goToLobby = (): void => {
     window.removeEventListener('keydown', onKeyDown);
     Ticker.shared.remove(updateTitleAnimation);
     scene.destroy({ children: true });
     runGame();
+  };
+
+  window.addEventListener('keydown', onKeyDown);
+
+  backBtn.on('pointertap', () => {
+    if (state.gameState !== 'idle') return;
+    goToLobby();
   });
 };
 
