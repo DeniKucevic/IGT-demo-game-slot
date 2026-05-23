@@ -1,49 +1,12 @@
-import { Application, Assets, Graphics } from "pixi.js";
+import { Application, Assets } from "pixi.js";
 import "./style.css";
-import {
-  DEFAULT_CONFIG,
-  REEL_GAP,
-  ROW_GAP,
-  SYMBOLS,
-  type GameConfig,
-} from "./shared/config";
-import { COLORS } from "./shared/colors";
-import { createReelGroup } from "./game/reels";
+import { DEFAULT_CONFIG, SYMBOLS, COLORS, computeLayout } from "./shared";
+import { createReelGroup, createSpinButton, createWinPopup, createStatDisplay } from "./components";
 import { getResponseData } from "./server/api";
-import { createSpinButton } from "./ui/spin-button";
-import { createWinPopup } from "./ui/win-popup";
 
-const HEADER_H = 48;
-const FOOTER_H = 108;
-const H_PAD = 32;
-const V_PAD = 20;
-
-const computeLayout = (
-  config: GameConfig,
-  screenW: number,
-  screenH: number,
-) => {
-  const availW = screenW - H_PAD * 2;
-  const availH = screenH - HEADER_H - FOOTER_H - V_PAD * 2;
-  const symFromW = Math.floor(
-    (availW - (config.reelCount - 1) * REEL_GAP) / config.reelCount,
-  );
-  const symFromH = Math.floor(
-    (availH - (config.rowCount - 1) * ROW_GAP) / config.rowCount,
-  );
-  const symbolSize = Math.max(40, Math.min(symFromW, symFromH));
-  const reelW =
-    config.reelCount * symbolSize + (config.reelCount - 1) * REEL_GAP;
-  const reelH = config.rowCount * symbolSize + (config.rowCount - 1) * ROW_GAP;
-  return {
-    symbolSize,
-    reelW,
-    reelH,
-    reelsX: Math.round((screenW - reelW) / 2),
-    reelsY: Math.round(HEADER_H + V_PAD + (availH - reelH) / 2),
-    controlsY: Math.round(screenH - FOOTER_H + 10),
-  };
-};
+const HEADER_MID_Y = 24; // vertical center of 48px header
+const STARTING_BALANCE = 1000;
+const BET = 10;
 
 // ── App ──
 const app = new Application();
@@ -58,23 +21,11 @@ document.getElementById("app")!.appendChild(app.canvas);
 await Assets.load(SYMBOLS.map((s) => ({ alias: s, src: `/symbols/${s}.png` })));
 
 // ── Layout ──
-const { symbolSize, reelW, reelH, reelsX, reelsY, controlsY } = computeLayout(
+const { symbolSize, reelW, reelsX, reelsY, controlsY } = computeLayout(
   DEFAULT_CONFIG,
   app.screen.width,
   app.screen.height,
 );
-
-//  Debug overlay (TODO: remove)
-// const debug = new Graphics();
-// debug.rect(reelsX, reelsY, reelW, reelH);
-// debug.stroke({ color: COLORS.debugRed, width: 2 });
-// debug.rect(0, 0, app.screen.width, HEADER_H);
-// debug.stroke({ color: COLORS.debugBlue, width: 2 });
-// debug.rect(0, app.screen.height - FOOTER_H, app.screen.width, FOOTER_H);
-// debug.stroke({ color: COLORS.debugGreen, width: 2 });
-// debug.circle(app.screen.width / 2, controlsY, 6);
-// debug.stroke({ color: COLORS.debugYellow, width: 2 });
-// app.stage.addChild(debug);
 
 // ── Reels ──
 const reelGroup = createReelGroup(DEFAULT_CONFIG, symbolSize);
@@ -92,18 +43,40 @@ app.stage.addChild(spinButton.root);
 const winPopup = createWinPopup(app.screen.width, app.screen.height);
 app.stage.addChild(winPopup.root);
 
+// ── Header stats ──
+let balance = STARTING_BALANCE;
+let spinCount = 0;
+
+const balanceDisplay = createStatDisplay("BALANCE", "left");
+balanceDisplay.root.x = 24;
+balanceDisplay.root.y = HEADER_MID_Y;
+balanceDisplay.setValue(balance);
+app.stage.addChild(balanceDisplay.root);
+
+const spinsDisplay = createStatDisplay("SPINS", "right");
+spinsDisplay.root.x = app.screen.width - 24;
+spinsDisplay.root.y = HEADER_MID_Y;
+spinsDisplay.setValue(spinCount);
+app.stage.addChild(spinsDisplay.root);
+
 // ── Game loop ──
 let spinning = false;
 
 const runSpin = (): void => {
   if (spinning) return;
   spinning = true;
+  balance -= BET;
+  spinCount++;
+  balanceDisplay.setValue(balance);
+  spinsDisplay.setValue(spinCount);
   spinButton.setEnabled(false);
   reelGroup.clearHighlights();
   reelGroup.spin();
   const result = getResponseData(DEFAULT_CONFIG);
   reelGroup.land(result.reelPositions, () => {
     if (result.winningLines.length > 0) {
+      balance += result.prize * BET;
+      balanceDisplay.setValue(balance);
       reelGroup.highlightWins(result.winningLines);
       winPopup.show(result.winningLines, result.prize, () => {
         reelGroup.clearHighlights();
