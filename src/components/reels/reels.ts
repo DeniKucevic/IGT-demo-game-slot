@@ -30,7 +30,7 @@ const generateFailsafePositions = (rowCount: number): number[] => {
 
 export type ReelGroup = {
   root: Container;
-  spin: (onReelStopped?: (reelIndex: number) => void) => void;
+  spin: () => void;
   land: (stopPositions: number[], onAllStopped: () => void) => void;
   highlightWins: (winLines: WinLine[]) => void;
   clearHighlights: () => void;
@@ -64,7 +64,7 @@ export const createReelGroup = (config: GameConfig, symbolSize: number): ReelGro
     reels.forEach((reel, reelIndex) => reel.land(stopPositions[reelIndex]));
   };
 
-  const spin = (onReelStopped?: (reelIndex: number) => void): void => {
+  const spin = (): void => {
     stoppedCount = 0;
     allStoppedCallback = null;
     const failsafePositions = generateFailsafePositions(rowCount);
@@ -72,7 +72,6 @@ export const createReelGroup = (config: GameConfig, symbolSize: number): ReelGro
     reels.forEach((reel, reelIndex) => {
       reel.spin(failsafePositions[reelIndex], () => {
         stoppedCount++;
-        onReelStopped?.(reelIndex);
         if (stoppedCount === reelCount) allStoppedCallback?.();
       });
     });
