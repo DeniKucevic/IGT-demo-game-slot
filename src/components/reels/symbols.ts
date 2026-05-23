@@ -36,7 +36,11 @@ export const createSymbolSlot = (symbolSize: number): SymbolSlot => {
   const glowOverlay = new Graphics();
   container.addChild(glowOverlay);
 
+  let currentSymbolIndex = -1;
   const setSymbol = (symbolIndex: number): void => {
+    if (symbolIndex === currentSymbolIndex) return;
+    currentSymbolIndex = symbolIndex;
+
     background.clear();
     background.roundRect(2, 2, symbolSize - 4, symbolSize - 4, 4);
     background.fill({
