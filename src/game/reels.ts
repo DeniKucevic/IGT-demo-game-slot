@@ -10,6 +10,32 @@ const MIN_SPIN_DURATION = 700;
 const DECEL_DURATION = 480;
 const REEL_STOP_DELAY = 320;
 const BASE_MAX_SPEED = 2.6; // ms at symbolSize=100
+const FAILSAFE_TIMEOUT = 5000; // ms in spin phase — forces stop if server never responds
+
+// Generates random stop positions guaranteed to produce no wins.
+// Only reels 0 and 1 matter, a win requires them to share a symbol on the same row.
+// If they don't match on any row, reels 2+ are irrelevant.
+const generateFailsafePositions = (rowCount: number): number[] => {
+  const pos0 = Math.floor(Math.random() * REEL_STRIPS[0].length);
+
+  const valid1 = REEL_STRIPS[1]
+    .map((_, p) => p)
+    .filter(
+      (p) =>
+        !Array.from(
+          { length: rowCount },
+          (_, row) =>
+            REEL_STRIPS[0][(pos0 + row) % REEL_STRIPS[0].length] ===
+            REEL_STRIPS[1][(p + row) % REEL_STRIPS[1].length],
+        ).some(Boolean),
+    );
+
+  const pos1 = valid1[Math.floor(Math.random() * valid1.length)] ?? 0;
+
+  return REEL_STRIPS.map((strip, i) =>
+    i === 0 ? pos0 : i === 1 ? pos1 : Math.floor(Math.random() * strip.length),
+  );
+};
 
 type ReelPhase = "idle" | "accel" | "spin" | "decel" | "done";
 
@@ -119,6 +145,7 @@ export const createReelGroup = (
   const spin = (onReelStopped?: (reelIndex: number) => void): void => {
     stoppedReelsCount = 0;
     allStoppedCallback = null;
+    const failsafePositions = generateFailsafePositions(rowCount);
 
     states.forEach((state, reelIndex) => {
       state.phase = "accel";
@@ -141,6 +168,14 @@ export const createReelGroup = (
             }
           } else if (state.phase === "spin") {
             state.position += maxSpeed * dt;
+
+            // If server never responded force a known no-win stop
+            if (
+              state.pendingStopIndex === null &&
+              state.elapsed >= FAILSAFE_TIMEOUT
+            ) {
+              state.pendingStopIndex = failsafePositions[reelIndex];
+            }
 
             if (
               state.pendingStopIndex !== null &&
@@ -165,7 +200,8 @@ export const createReelGroup = (
               (state.targetPos - state.startPos) * easeOutBounce(progress);
 
             if (state.elapsed >= DECEL_DURATION) {
-              state.position = state.targetPos;
+              // Normalize so position never grows unboundedly across spins
+              state.position = state.targetPos % REEL_STRIPS[reelIndex].length;
               state.phase = "done";
               sharedTicker.remove(onTick);
               stoppedReelsCount++;
