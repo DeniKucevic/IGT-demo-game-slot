@@ -7,7 +7,7 @@ import { FOOTER_H, HEADER_H } from '@shared/layout';
 import type { WinTier } from '@shared/types';
 
 import type { AppState } from '@core/state';
-import { playClick, playSpin, stopSpin, playStop, playResult, setMuted, unduckLobbyMusic } from '@core/sound';
+import { playClick, playSpin, stopSpin, playStop, playResult, playGameOver, setMuted, unduckLobbyMusic } from '@core/sound';
 import { getResponseData } from '@server/api';
 
 import {
@@ -57,7 +57,10 @@ export const createGameSession = (
   const reelGroup = createReelGroup(config, baseSymbolSize);
   const spinButton = createSpinButton();
   const allInButton = createAllInButton();
-  const betSelector = createBetSelector(() => deactivateAllIn());
+  const betSelector = createBetSelector(() => {
+    playClick();
+    deactivateAllIn();
+  });
   const winPopup = createWinPopup(app.screen.width, app.screen.height);
   const gameOverScreen = createGameOverScreen(app.screen.width, app.screen.height);
   const balanceDisplay = createStatDisplay(STRINGS.header.balance, 'left');
@@ -250,6 +253,7 @@ export const createGameSession = (
     reelGroup.clearHighlights();
     betSelector.setAllIn(false);
     if (state.balance <= 0) {
+      playGameOver();
       gameOverScreen.show(exitSession);
     } else {
       state.gameState = 'idle';
@@ -310,7 +314,10 @@ export const createGameSession = (
     betSelector.setAllIn(state.isAllIn);
   });
 
-  spinButton.root.on('pointertap', runSpin);
+  spinButton.root.on('pointertap', () => {
+    playClick();
+    runSpin();
+  });
 
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.code === 'Space') {

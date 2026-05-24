@@ -13,6 +13,7 @@ import {
   loadSounds,
   setMuted,
   getSavedMuted,
+  playClick,
   playLobbyMusic,
   stopLobbyMusic,
   duckLobbyMusic,
@@ -52,6 +53,7 @@ const runGame = async (): Promise<void> => {
       app.screen.width,
       app.screen.height,
       (s) => {
+        playClick();
         app.renderer.off('resize', lobby.resize);
         duckLobbyMusic();
         lobby.destroy();
@@ -59,11 +61,13 @@ const runGame = async (): Promise<void> => {
         resolve(s);
       },
       (m) => {
+        playClick();
         setMuted(m);
         if (m) stopLobbyMusic();
         else playLobbyMusic();
       },
       savedMuted,
+      playClick,
     );
     app.stage.addChild(lobby.root);
     app.renderer.on('resize', lobby.resize);

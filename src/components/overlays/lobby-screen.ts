@@ -92,6 +92,7 @@ const createChipRow = (
   values: number[],
   defaultIndex: number,
   rowW: number,
+  onSelect?: () => void,
 ): ChipRow => {
   const root = new Container();
   let selectedIndex = defaultIndex;
@@ -111,6 +112,7 @@ const createChipRow = (
       chips[selectedIndex].setActive(false);
       selectedIndex = i;
       chips[i].setActive(true);
+      onSelect?.();
     });
 
     chips.push(chip);
@@ -168,6 +170,7 @@ export const createLobbyScreen = (
   onPlay: (settings: LobbySettings) => void,
   onMuteToggle?: (muted: boolean) => void,
   initialMuted = false,
+  onInteract?: () => void,
 ): LobbyScreen => {
   const root = new Container();
 
@@ -203,13 +206,13 @@ export const createLobbyScreen = (
   curY += LABEL_H + LABEL_CHIP_GAP + CHIP_H + SECTION_GAP;
 
   // Reels row
-  const reelsRow = createChipRow(STRINGS.lobby.reels, [3, 4, 5], 2, INNER_W);
+  const reelsRow = createChipRow(STRINGS.lobby.reels, [3, 4, 5], 2, INNER_W, onInteract);
   reelsRow.root.position.set(PAD, curY);
   panel.addChild(reelsRow.root);
   curY += reelsRow.height + SECTION_GAP;
 
   // Rows row
-  const rowsRow = createChipRow(STRINGS.lobby.rows, [2, 3, 4], 1, INNER_W);
+  const rowsRow = createChipRow(STRINGS.lobby.rows, [2, 3, 4], 1, INNER_W, onInteract);
   rowsRow.root.position.set(PAD, curY);
   panel.addChild(rowsRow.root);
   curY += rowsRow.height + SECTION_GAP;

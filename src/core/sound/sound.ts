@@ -47,11 +47,11 @@ export const playSpin = (): void => {
 
 export const stopSpin = (): void => {
   spinSoundActive = false;
-  try {
-    $sound?.stop('spin');
-  } catch {
-    /* ignore */
-  }
+  // Defer the stop so any internal @pixi/sound error cannot block the
+  // playStop() call that immediately follows at the call site
+  Promise.resolve().then(() => {
+    try { $sound?.stop('spin'); } catch { /* ignore */ }
+  });
 };
 
 export const playStop = (): void => {
@@ -67,6 +67,10 @@ const WIN_TIER_SOUND: Record<WinTier, string> = {
 
 export const playResult = (tier: WinTier | null): void => {
   if (!muted) play(tier ? WIN_TIER_SOUND[tier] : 'no-win');
+};
+
+export const playGameOver = (): void => {
+  if (!muted) play('game-over');
 };
 
 export const playLobbyMusic = (): void => {
@@ -109,13 +113,14 @@ export const loadSounds = (): void => {
     if (muted) $sound.muteAll();
 
     $sound.add('lobby', `${SOUND_PATH}/lobby.wav`);
-    $sound.add('click', { url: `${SOUND_PATH}/click.mp3`, preload: true });
-    $sound.add('spin', { url: `${SOUND_PATH}/spin.wav`, preload: true });
-    $sound.add('stop', { url: `${SOUND_PATH}/stop.wav`, preload: true });
-    $sound.add('no-win', { url: `${SOUND_PATH}/no-win.wav`, preload: true });
-    $sound.add('win', { url: `${SOUND_PATH}/win.wav`, preload: true });
-    $sound.add('big-win', { url: `${SOUND_PATH}/big-win.wav`, preload: true });
-    $sound.add('jackpot', { url: `${SOUND_PATH}/jackpot.wav`, preload: true });
+    $sound.add('click', `${SOUND_PATH}/click.mp3`);
+    $sound.add('spin', `${SOUND_PATH}/spin.wav`);
+    $sound.add('stop', `${SOUND_PATH}/stop.wav`);
+    $sound.add('no-win', `${SOUND_PATH}/no-win.wav`);
+    $sound.add('win', `${SOUND_PATH}/win.wav`);
+    $sound.add('big-win', `${SOUND_PATH}/big-win.wav`);
+    $sound.add('jackpot', `${SOUND_PATH}/jackpot.wav`);
+    $sound.add('game-over', `${SOUND_PATH}/game-over.wav`);
 
     // playLobbyMusic may have been called on the same gesture before the import
     // resolved — if so, start the music now that $sound is ready
