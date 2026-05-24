@@ -47,6 +47,7 @@ const easeOutBounce = (t: number): number => {
 export type WinPopup = {
   root: Container;
   show: (winLines: WinLine[], prize: number, onDone: () => void) => void;
+  resize: (w: number, h: number) => void;
 };
 
 export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
@@ -213,5 +214,12 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
     Ticker.shared.add(tickerFn);
   };
 
-  return { root, show };
+  const resize = (w: number, h: number): void => {
+    overlay.clear();
+    overlay.rect(0, 0, w, h).fill({ color: '#000000', alpha: 0.5 });
+    panel.x = Math.round(w / 2);
+    panel.y = Math.round(h / 2);
+  };
+
+  return { root, show, resize };
 };

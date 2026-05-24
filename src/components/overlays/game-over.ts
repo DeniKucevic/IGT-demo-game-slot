@@ -14,6 +14,7 @@ const easeOutBack = (t: number): number => {
 export type GameOverScreen = {
   root: Container;
   show: (onPlayAgain: () => void) => void;
+  resize: (w: number, h: number) => void;
 };
 
 export const createGameOverScreen = (screenW: number, screenH: number): GameOverScreen => {
@@ -101,5 +102,12 @@ export const createGameOverScreen = (screenW: number, screenH: number): GameOver
     });
   };
 
-  return { root, show };
+  const resize = (w: number, h: number): void => {
+    overlay.clear();
+    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.55 });
+    panel.x = Math.round(w / 2);
+    panel.y = Math.round(h / 2);
+  };
+
+  return { root, show, resize };
 };

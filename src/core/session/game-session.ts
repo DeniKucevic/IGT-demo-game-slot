@@ -44,6 +44,7 @@ export const createGameSession = (
     symbolSize: baseSymbolSize,
     reelW,
     reelH,
+    reelsX,
   } = computeLayout(config, app.screen.width, app.screen.height);
 
   // ── UI components ──
@@ -117,12 +118,7 @@ export const createGameSession = (
 
   // ── Reels area ──
   const reelsArea = new Container();
-  reelsArea.layout = {
-    flexGrow: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  };
+  reelsArea.layout = { flexGrow: 1, width: '100%', justifyContent: 'center', alignItems: 'center' };
 
   const reelHolder = new Container();
   reelHolder.layout = { width: reelW, height: reelH };
@@ -147,17 +143,35 @@ export const createGameSession = (
   const controlsStrip = new Container();
   controlsStrip.layout = { width: '100%', height: FOOTER_H };
 
-  const initialCtrlScale = Math.min(1, app.screen.width / ctrlTotalW);
-  const initialScaledW = ctrlTotalW * initialCtrlScale;
-  const initialScaledH = ctrlTotalH * initialCtrlScale;
-  controlsGroup.scale.set(initialCtrlScale);
-  controlsGroup.layout = {
-    position: 'absolute',
-    left: Math.round((app.screen.width - initialScaledW) / 2),
-    top: Math.round((FOOTER_H - initialScaledH) / 2),
-  };
+  controlsGroup.layout = { position: 'absolute', left: 0, top: 0 };
   controlsStrip.addChild(controlsGroup);
   scene.addChild(controlsStrip);
+
+  const positionControls = (w: number, rx: number): void => {
+    const availW = w - rx * 2;
+    const itemsW = BET_SELECTOR_WIDTH + ALLIN_SIZE + spinButton.width;
+    if (itemsW <= availW) {
+      controlsGroup.scale.set(1);
+      betSelector.root.x = 0;
+      allInButton.root.x = Math.round((availW - ALLIN_SIZE) / 2);
+      spinButton.root.x = availW - spinButton.width;
+      controlsGroup.layout!.setStyle({ left: rx, top: Math.round((FOOTER_H - ctrlTotalH) / 2) });
+    } else {
+      const ctrlScale = Math.min(1, w / ctrlTotalW);
+      const scaledW = ctrlTotalW * ctrlScale;
+      const scaledH = ctrlTotalH * ctrlScale;
+      controlsGroup.scale.set(ctrlScale);
+      betSelector.root.x = 0;
+      allInButton.root.x = BET_SELECTOR_WIDTH + CTRL_GAP;
+      spinButton.root.x = BET_SELECTOR_WIDTH + CTRL_GAP + ALLIN_SIZE + CTRL_GAP;
+      controlsGroup.layout!.setStyle({
+        left: Math.round((w - scaledW) / 2),
+        top: Math.round((FOOTER_H - scaledH) / 2),
+      });
+    }
+  };
+
+  positionControls(app.screen.width, reelsX);
 
   scene.addChild(winPopup.root, gameOverScreen.root);
 
@@ -172,21 +186,16 @@ export const createGameSession = (
       symbolSize,
       reelW: newReelW,
       reelH: newReelH,
+      reelsX: newReelsX,
     } = computeLayout(config, w, h);
 
     const scale = symbolSize / baseSymbolSize;
     reelGroup.root.scale.set(scale);
     reelHolder.layout!.setStyle({ width: newReelW, height: newReelH });
 
-    const ctrlScale = Math.min(1, w / ctrlTotalW);
-    const scaledW = ctrlTotalW * ctrlScale;
-    const scaledH = ctrlTotalH * ctrlScale;
-    controlsGroup.scale.set(ctrlScale);
-    controlsGroup.layout!.setStyle({
-      left: Math.round((w - scaledW) / 2),
-      top: Math.round((FOOTER_H - scaledH) / 2),
-    });
-
+    positionControls(w, newReelsX);
+    winPopup.resize(w, h);
+    gameOverScreen.resize(w, h);
     gameTitleWrapper.visible = w >= TITLE_MIN_W;
   };
 
