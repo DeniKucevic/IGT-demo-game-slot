@@ -5,15 +5,14 @@ import type { WinTier } from '@shared/types';
 const SOUND_PATH = '/assets/sounds';
 
 export const loadSounds = (): void => {
-  // No preload — load on first play to avoid decode errors for missing/wrong-format files
-  sound.add('click', `${SOUND_PATH}/click.mp3`);
-  sound.add('spin', `${SOUND_PATH}/spin.wav`);
-  sound.add('stop', `${SOUND_PATH}/stop.wav`);
-  sound.add('no-win', `${SOUND_PATH}/no-win.wav`);
-  sound.add('win', `${SOUND_PATH}/win.wav`);
-  sound.add('big-win', `${SOUND_PATH}/big-win.wav`);
-  sound.add('jackpot', `${SOUND_PATH}/jackpot.wav`);
-  sound.add('lobby', `${SOUND_PATH}/lobby.wav`);
+  sound.add('click', { url: `${SOUND_PATH}/click.mp3`, preload: true });
+  sound.add('spin', { url: `${SOUND_PATH}/spin.wav`, preload: true });
+  sound.add('stop', { url: `${SOUND_PATH}/stop.wav`, preload: true });
+  sound.add('no-win', { url: `${SOUND_PATH}/no-win.wav`, preload: true });
+  sound.add('win', { url: `${SOUND_PATH}/win.wav`, preload: true });
+  sound.add('big-win', { url: `${SOUND_PATH}/big-win.wav`, preload: true });
+  sound.add('jackpot', { url: `${SOUND_PATH}/jackpot.wav`, preload: true });
+  sound.add('lobby', { url: `${SOUND_PATH}/lobby.wav`, preload: true });
 };
 
 let muted = false;

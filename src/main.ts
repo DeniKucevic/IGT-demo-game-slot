@@ -16,7 +16,7 @@ import {
   stopLobbyMusic,
 } from '@core';
 
-import { createLobbyScreen, type LobbySettings } from '@components';
+import { createLobbyScreen, createLoadingScreen, type LobbySettings } from '@components';
 
 // ── App ──
 const app = new Application();
@@ -32,8 +32,17 @@ document.getElementById('app')!.appendChild(app.canvas);
 // Defer sound init to first gesture — avoids the AudioContext autoplay warning
 window.addEventListener('pointerdown', loadSounds, { once: true });
 
+// Loading screen while assets fetch
+const loading = createLoadingScreen(app.screen.width, app.screen.height);
+app.stage.addChild(loading.root);
+app.renderer.on('resize', loading.resize);
+await loadAssets();
+app.renderer.off('resize', loading.resize);
+app.stage.removeChild(loading.root);
+loading.root.destroy({ children: true });
+
 const runGame = async (): Promise<void> => {
-  const settingsPromise = new Promise<LobbySettings>((resolve) => {
+  const lobbySettings = await new Promise<LobbySettings>((resolve) => {
     const lobby = createLobbyScreen(
       app.screen.width,
       app.screen.height,
@@ -52,17 +61,8 @@ const runGame = async (): Promise<void> => {
     );
     app.stage.addChild(lobby.root);
     app.renderer.on('resize', lobby.resize);
+    window.addEventListener('pointerdown', playLobbyMusic, { once: true });
   });
-
-  const [lobbySettings] = await Promise.all([
-    settingsPromise,
-    loadAssets().then(() => {
-      // Lobby music starts on first gesture (sounds might not be registered yet
-      // if user hasn't clicked — the pointerdown handler above ensures loadSounds
-      // runs first, then this once-handler plays music on the same or next gesture)
-      window.addEventListener('pointerdown', playLobbyMusic, { once: true });
-    }),
-  ]);
 
   window.removeEventListener('pointerdown', playLobbyMusic);
 
