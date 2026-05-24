@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, TextStyle } from 'pixi.js';
+import { Container, Graphics, Text } from 'pixi.js';
 
 import { COLORS, STRINGS, STYLES } from '../../shared';
 import { BUTTON_HEIGHT, createButton } from '../common/button';
@@ -12,12 +12,6 @@ const LABEL_CHIP_GAP = 10;
 const PAD = 24;
 const INNER_W = PANEL_W - PAD * 2;
 
-const chipActive = new TextStyle({
-  fontSize: 15,
-  fontWeight: 'bold',
-  fontFamily: 'monospace',
-  fill: COLORS.white,
-});
 
 export type LobbySettings = {
   reelCount: number;
@@ -57,9 +51,9 @@ const createChip = (label: string, w: number): Chip => {
     if (active) {
       bg.fill({ color: COLORS.black });
       bg.stroke({ color: COLORS.black, width: 2 });
-      txt.style = chipActive;
+      txt.style = STYLES.chipActive;
     } else if (hover) {
-      bg.fill({ color: '#ece8e3' });
+      bg.fill({ color: COLORS.chipHover });
       bg.stroke({ color: COLORS.black, width: 1.5 });
       txt.style = STYLES.chipLabel;
     } else {
@@ -253,13 +247,13 @@ export const createLobbyScreen = (
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.textContent = text;
-    Object.assign(a.style, { color: '#888888', textDecoration: 'none' });
+    Object.assign(a.style, { color: COLORS.hint, textDecoration: 'none' });
     a.addEventListener('mouseenter', () => {
-      a.style.color = '#000000';
+      a.style.color = COLORS.black;
       a.style.textDecoration = 'underline';
     });
     a.addEventListener('mouseleave', () => {
-      a.style.color = '#888888';
+      a.style.color = COLORS.hint;
       a.style.textDecoration = 'none';
     });
     return a;
@@ -269,7 +263,7 @@ export const createLobbyScreen = (
   Object.assign(creditsEl.style, {
     position: 'fixed',
     fontFamily: 'monospace',
-    color: '#888888',
+    color: COLORS.hint,
     textAlign: 'center',
     zIndex: '10',
     pointerEvents: 'auto',

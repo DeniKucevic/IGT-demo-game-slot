@@ -25,14 +25,14 @@ export const STYLES = {
     fill: COLORS.black,
   }),
   headerTitle: new TextStyle({
-    fill: '#ffd700',
+    fill: COLORS.gold,
     fontFamily: 'Tahoma',
     fontSize: 30,
     fontStyle: 'italic',
     fontWeight: 'bold',
     letterSpacing: 8,
     stroke: {
-      color: '#000000',
+      color: COLORS.black,
       width: 3,
     },
   }),
@@ -43,6 +43,12 @@ export const STYLES = {
     fontWeight: 'bold',
     fontFamily: 'monospace',
     fill: COLORS.black,
+  }),
+  chipActive: new TextStyle({
+    fontSize: 15,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    fill: COLORS.white,
   }),
 
   // Bet selector cards

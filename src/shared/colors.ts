@@ -23,6 +23,7 @@ export const COLORS = {
   gold: '#ffd700',
   white: '#ffffff',
   hint: '#888888',
+  chipHover: '#ece8e3',
 
   // buttons
   btnFill: '#111111',
