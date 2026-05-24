@@ -30,9 +30,12 @@ export const setMuted = (m: boolean): void => {
 const play = (alias: string, options?: { loop?: boolean; volume?: number }): void => {
   if (!tabVisible || !$sound) return;
   try {
-    $sound.play(alias, options as Parameters<typeof $sound.play>[1]);
-  } catch {
-    // File missing or wrong format — fail silently
+    const result = $sound.play(alias, options as Parameters<typeof $sound.play>[1]);
+    // play() returns a Promise when the sound hasn't loaded yet — catch rejections
+    // so decode/network errors surface instead of disappearing silently
+    if (result instanceof Promise) result.catch((e) => console.warn(`[sound] "${alias}" failed:`, e));
+  } catch (e) {
+    console.warn(`[sound] "${alias}" failed:`, e);
   }
 };
 
@@ -54,9 +57,6 @@ export const stopSpin = (): void => {
   });
 };
 
-export const playStop = (): void => {
-  if (!muted) play('stop');
-};
 
 const WIN_TIER_SOUND: Record<WinTier, string> = {
   small: 'win',
@@ -115,7 +115,6 @@ export const loadSounds = (): void => {
     $sound.add('lobby', `${SOUND_PATH}/lobby.wav`);
     $sound.add('click', `${SOUND_PATH}/click.mp3`);
     $sound.add('spin', `${SOUND_PATH}/spin.wav`);
-    $sound.add('stop', `${SOUND_PATH}/stop.wav`);
     $sound.add('no-win', `${SOUND_PATH}/no-win.wav`);
     $sound.add('win', `${SOUND_PATH}/win.wav`);
     $sound.add('big-win', `${SOUND_PATH}/big-win.wav`);

@@ -7,7 +7,7 @@ import { FOOTER_H, HEADER_H } from '@shared/layout';
 import type { WinTier } from '@shared/types';
 
 import type { AppState } from '@core/state';
-import { playClick, playSpin, stopSpin, playStop, playResult, playGameOver, setMuted, unduckLobbyMusic } from '@core/sound';
+import { playClick, playSpin, stopSpin, playResult, playGameOver, setMuted, unduckLobbyMusic } from '@core/sound';
 import { getResponseData } from '@server/api';
 
 import {
@@ -278,7 +278,7 @@ export const createGameSession = (
     spinButton.setAllIn(false);
 
     reelGroup.clearHighlights();
-    reelGroup.spin();
+    reelGroup.spin(playClick);
     playSpin();
 
     try {
@@ -286,7 +286,6 @@ export const createGameSession = (
 
       reelGroup.land(result.reelPositions, () => {
         stopSpin();
-        playStop();
         if (result.winningLines.length > 0) {
           state.gameState = 'showing-win';
           updateBalance(state.balance + result.prize * bet);
@@ -294,7 +293,7 @@ export const createGameSession = (
           playResult(topWinTier(result.winningLines.map((l) => l.tier)));
           winPopup.show(result.winningLines, result.prize, endRound);
         } else {
-          playResult(null);
+          if (state.balance > 0) playResult(null);
           endRound();
         }
       });
