@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/igt-slot-game/:path*", "destination": "/:path*" }
+  ]
+}
