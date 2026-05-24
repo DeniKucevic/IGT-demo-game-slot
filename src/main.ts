@@ -24,11 +24,13 @@ document.getElementById('app')!.appendChild(app.canvas);
 const runGame = async (): Promise<void> => {
   const settingsPromise = new Promise<LobbySettings>((resolve) => {
     const lobby = createLobbyScreen(app.screen.width, app.screen.height, (s) => {
+      app.renderer.off('resize', lobby.resize);
       lobby.destroy();
       app.stage.removeChild(lobby.root);
       resolve(s);
     });
     app.stage.addChild(lobby.root);
+    app.renderer.on('resize', lobby.resize);
   });
 
   const [lobbySettings] = await Promise.all([settingsPromise, loadAssets()]);

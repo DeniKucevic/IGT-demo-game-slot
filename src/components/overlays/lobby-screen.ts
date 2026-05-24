@@ -29,6 +29,7 @@ export type LobbySettings = {
 export type LobbyScreen = {
   root: Container;
   destroy: () => void;
+  resize: (w: number, h: number) => void;
 };
 
 type Chip = { root: Container; setActive: (a: boolean) => void };
@@ -300,5 +301,15 @@ export const createLobbyScreen = (
     creditInput.remove();
   };
 
-  return { root, destroy };
+  const resize = (w: number, h: number): void => {
+    screenBg.clear();
+    screenBg.rect(0, 0, w, h).fill({ color: COLORS.background });
+    const newPanelX = Math.round(w / 2 - PANEL_W / 2);
+    const newPanelY = Math.round(h / 2 - panelH / 2);
+    panel.position.set(newPanelX, newPanelY);
+    creditInput.style.left = `${newPanelX + PAD}px`;
+    creditInput.style.top = `${newPanelY + creditInputOffsetY}px`;
+  };
+
+  return { root, destroy, resize };
 };

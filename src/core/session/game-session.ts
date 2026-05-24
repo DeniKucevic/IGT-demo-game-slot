@@ -18,6 +18,7 @@ import {
   createAllInButton,
   createTitleDisplay,
   ALLIN_SIZE,
+  BET_SELECTOR_WIDTH,
   BUTTON_HEIGHT,
 } from '@components';
 
@@ -26,7 +27,6 @@ const TITLE_ANIM_INTERVAL = 1500;
 const BACK_BTN_W = 52;
 const BACK_BTN_H = 30;
 const BALANCE_X = BACK_BTN_W + 16;
-const CONTROLS_PAD_Y = 10;
 
 export const createGameSession = (
   config: GameConfig,
@@ -90,14 +90,27 @@ export const createGameSession = (
   backBtn.on('pointerout', () => drawBackBtn(false));
 
   // ── Header strip ──
+  // backBtn and balanceDisplay use fixed left: absolute positions — no resize updates needed.
+  // gameTitle and spinsDisplay are wrapped in zero-size containers so @pixi/layout can
+  // position them with left:'50%' and right:24 — they stay responsive automatically.
   const headerStrip = new Container();
   headerStrip.layout = { width: '100%', height: HEADER_H };
 
-  backBtn.position.set(8, Math.round((HEADER_H - BACK_BTN_H) / 2));
-  balanceDisplay.root.position.set(BALANCE_X, HEADER_MID_Y);
-  gameTitle.root.position.set(app.screen.width / 2, HEADER_MID_Y);
-  spinsDisplay.root.position.set(app.screen.width - 24, HEADER_MID_Y);
-  headerStrip.addChild(backBtn, balanceDisplay.root, gameTitle.root, spinsDisplay.root);
+  backBtn.layout = { position: 'absolute', left: 8, top: Math.round((HEADER_H - BACK_BTN_H) / 2) };
+  balanceDisplay.root.layout = { position: 'absolute', left: BALANCE_X, top: 0 };
+  balanceDisplay.root.y = HEADER_MID_Y;
+
+  const gameTitleWrapper = new Container();
+  gameTitleWrapper.layout = { position: 'absolute', left: '50%', top: 0 };
+  gameTitle.root.position.set(0, HEADER_MID_Y);
+  gameTitleWrapper.addChild(gameTitle.root);
+
+  const spinsWrapper = new Container();
+  spinsWrapper.layout = { position: 'absolute', right: 24, top: 0 };
+  spinsDisplay.root.position.set(0, HEADER_MID_Y);
+  spinsWrapper.addChild(spinsDisplay.root);
+
+  headerStrip.addChild(backBtn, balanceDisplay.root, gameTitleWrapper, spinsWrapper);
   scene.addChild(headerStrip);
 
   // ── Reels area ──
@@ -115,22 +128,23 @@ export const createGameSession = (
   reelsArea.addChild(reelHolder);
   scene.addChild(reelsArea);
 
-  // ── Controls strip ──
+  // ── Controls strip: flex row, padded to match reel group width ──
   const controlsStrip = new Container();
-  controlsStrip.layout = { width: '100%', height: FOOTER_H };
-
-  const spinOffsetY = Math.round((betSelector.height - BUTTON_HEIGHT) / 2);
-
-  const positionControls = (rx: number, rw: number): void => {
-    betSelector.root.position.set(rx, CONTROLS_PAD_Y);
-    allInButton.root.position.set(
-      rx + Math.round((rw - ALLIN_SIZE) / 2),
-      CONTROLS_PAD_Y + Math.round((betSelector.height - ALLIN_SIZE) / 2),
-    );
-    spinButton.root.position.set(rx + rw - spinButton.width, CONTROLS_PAD_Y + spinOffsetY);
+  controlsStrip.layout = {
+    width: '100%',
+    height: FOOTER_H,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingLeft: reelsX,
+    paddingRight: reelsX,
   };
 
-  positionControls(reelsX, reelW);
+  // flexShrink: 0 prevents @pixi/layout from squeezing items below their natural size.
+  betSelector.root.layout = { width: BET_SELECTOR_WIDTH, height: betSelector.height, flexShrink: 0 };
+  allInButton.root.layout = { width: ALLIN_SIZE, height: ALLIN_SIZE, flexShrink: 0 };
+  spinButton.root.layout = { width: spinButton.width, height: BUTTON_HEIGHT, flexShrink: 0 };
+
   controlsStrip.addChild(betSelector.root, allInButton.root, spinButton.root);
   scene.addChild(controlsStrip);
 
@@ -138,6 +152,9 @@ export const createGameSession = (
 
   updateBalance(state.balance);
   spinsDisplay.setValue(state.spinCount);
+
+  // Minimum content width for the three controls; padding shrinks to 0 before items overflow.
+  const ctrlMinContentW = BET_SELECTOR_WIDTH + ALLIN_SIZE + spinButton.width + 32;
 
   // ── Resize handler ──
   const onResize = (w: number, h: number): void => {
@@ -154,10 +171,9 @@ export const createGameSession = (
     reelGroup.root.scale.set(scale);
     reelHolder.layout!.setStyle({ width: newReelW, height: newReelH });
 
-    gameTitle.root.x = w / 2;
-    spinsDisplay.root.x = w - 24;
-
-    positionControls(newReelsX, newReelW);
+    // Clamp padding so controls never overflow on narrow screens.
+    const pad = Math.min(newReelsX, Math.max(0, Math.floor((w - ctrlMinContentW) / 2)));
+    controlsStrip.layout!.setStyle({ paddingLeft: pad, paddingRight: pad });
   };
 
   app.renderer.on('resize', onResize);
