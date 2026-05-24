@@ -39,6 +39,6 @@ export const DEFAULT_CONFIG: GameConfig = {
 
 export const BET_VALUES = [1, 5, 25, 100]; // TALL, GRANDE, VENTI, TRENTA
 
-export const SYMBOLS_PATH = '/assets/symbols';
-export const CUP_ASSET = '/assets/ui/cup.png';
-export const ALL_IN_ASSET = '/assets/ui/all-in.png';
+export const SYMBOLS_PATH = `${import.meta.env.BASE_URL}assets/symbols`;
+export const CUP_ASSET = `${import.meta.env.BASE_URL}assets/ui/cup.png`;
+export const ALL_IN_ASSET = `${import.meta.env.BASE_URL}assets/ui/all-in.png`;

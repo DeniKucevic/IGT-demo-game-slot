@@ -2,7 +2,7 @@ import type { SoundLibrary } from '@pixi/sound';
 
 import type { WinTier } from '@shared/types';
 
-const SOUND_PATH = '/assets/sounds';
+const SOUND_PATH = `${import.meta.env.BASE_URL}assets/sounds`;
 const MUTED_KEY = 'slot-muted';
 const LOBBY_VOL_FULL = 0.35;
 const LOBBY_VOL_GAME = 0.05;
