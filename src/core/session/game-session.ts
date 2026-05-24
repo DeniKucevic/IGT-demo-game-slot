@@ -86,15 +86,24 @@ export const createGameSession = (
   backTxt.y = BACK_BTN_H / 2;
   backTxt.eventMode = 'none';
 
+  let backBtnDisabled = false;
+
   const drawBackBtn = (hover: boolean): void => {
     backBg.clear();
     backBg.roundRect(0, 0, BACK_BTN_W, BACK_BTN_H, 4);
-    backBg.fill({ color: hover ? COLORS.btnFillHover : COLORS.btnFill });
+    backBg.fill({ color: backBtnDisabled ? COLORS.btnFillDisabled : hover ? COLORS.btnFillHover : COLORS.btnFill });
+    backTxt.style.fill = backBtnDisabled ? COLORS.hint : COLORS.white;
+  };
+
+  const setBackBtnDisabled = (d: boolean): void => {
+    backBtnDisabled = d;
+    backBtn.cursor = d ? 'default' : 'pointer';
+    drawBackBtn(false);
   };
 
   drawBackBtn(false);
   backBtn.addChild(backBg, backTxt);
-  backBtn.on('pointerover', () => drawBackBtn(true));
+  backBtn.on('pointerover', () => { if (!backBtnDisabled) drawBackBtn(true); });
   backBtn.on('pointerout', () => drawBackBtn(false));
 
   // ── Header strip ──
@@ -234,6 +243,7 @@ export const createGameSession = (
     spinButton.setEnabled(enabled);
     betSelector.setEnabled(enabled);
     allInButton.setEnabled(enabled);
+    setBackBtnDisabled(!enabled);
   };
 
   const endRound = (): void => {

@@ -15,11 +15,16 @@ export const loadSounds = (): void => {
   sound.add('lobby', { url: `${SOUND_PATH}/lobby.wav`, preload: true });
 };
 
+const MUTED_KEY = 'slot-muted';
+
 let muted = false;
 let lobbyMusicActive = false;
 
+export const getSavedMuted = (): boolean => localStorage.getItem(MUTED_KEY) === 'true';
+
 export const setMuted = (m: boolean): void => {
   muted = m;
+  localStorage.setItem(MUTED_KEY, String(m));
   if (m) sound.muteAll();
   else sound.unmuteAll();
 };

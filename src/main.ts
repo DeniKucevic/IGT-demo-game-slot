@@ -12,6 +12,7 @@ import {
   createGameSession,
   loadSounds,
   setMuted,
+  getSavedMuted,
   playLobbyMusic,
   stopLobbyMusic,
 } from '@core';
@@ -42,6 +43,9 @@ app.stage.removeChild(loading.root);
 loading.root.destroy({ children: true });
 
 const runGame = async (): Promise<void> => {
+  const savedMuted = getSavedMuted();
+  setMuted(savedMuted);
+
   const lobbySettings = await new Promise<LobbySettings>((resolve) => {
     const lobby = createLobbyScreen(
       app.screen.width,
@@ -58,6 +62,7 @@ const runGame = async (): Promise<void> => {
         if (m) stopLobbyMusic();
         else playLobbyMusic();
       },
+      savedMuted,
     );
     app.stage.addChild(lobby.root);
     app.renderer.on('resize', lobby.resize);

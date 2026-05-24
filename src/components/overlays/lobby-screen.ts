@@ -126,7 +126,7 @@ const createChipRow = (
 
 type SoundToggle = { root: Container; getMuted: () => boolean };
 
-const createSoundToggle = (w: number): SoundToggle => {
+const createSoundToggle = (w: number, initialMuted = false): SoundToggle => {
   const root = new Container();
   root.eventMode = 'static';
   root.cursor = 'pointer';
@@ -134,9 +134,9 @@ const createSoundToggle = (w: number): SoundToggle => {
   const bg = new Graphics();
   root.addChild(bg);
 
-  let muted = false;
+  let muted = initialMuted;
 
-  const txt = new Text({ text: STRINGS.lobby.soundOn, style: STYLES.btnLabel });
+  const txt = new Text({ text: initialMuted ? STRINGS.lobby.soundOff : STRINGS.lobby.soundOn, style: STYLES.btnLabel });
   txt.anchor.set(0.5);
   txt.x = w / 2;
   txt.y = BUTTON_HEIGHT / 2;
@@ -167,6 +167,7 @@ export const createLobbyScreen = (
   screenH: number,
   onPlay: (settings: LobbySettings) => void,
   onMuteToggle?: (muted: boolean) => void,
+  initialMuted = false,
 ): LobbyScreen => {
   const root = new Container();
 
@@ -217,7 +218,7 @@ export const createLobbyScreen = (
   const soundBtnW = Math.round(INNER_W * 0.38);
   const playBtnW = INNER_W - soundBtnW - CHIP_GAP;
 
-  const soundToggle = createSoundToggle(soundBtnW);
+  const soundToggle = createSoundToggle(soundBtnW, initialMuted);
   soundToggle.root.on('pointertap', () => onMuteToggle?.(soundToggle.getMuted()));
   soundToggle.root.position.set(PAD, curY);
   panel.addChild(soundToggle.root);
