@@ -131,18 +131,17 @@ export const loadSounds = (): void => {
       play('lobby', { loop: true, volume: lobbyVol });
     }
 
-    // Pre-warm result sounds in the background so the first play is instant.
-    // Delayed 400ms to avoid a race with lobby/click which play on this gesture.
+    // Pre-warm sounds that won't play on this gesture so their first play is instant.
+    // lobby and click are excluded — they play immediately and sharing a decode call
+    // with load() on the same gesture causes an AudioBufferSourceNode.buffer crash.
     // Sound.load() exists at runtime but is absent from the v6 type definitions.
-    setTimeout(() => {
-      ['no-win', 'win', 'big-win', 'jackpot', 'game-over', 'spin'].forEach((alias) => {
-        try {
-          ($sound?.find(alias) as unknown as { load?: () => void } | undefined)?.load?.();
-        } catch {
-          /* ignore */
-        }
-      });
-    }, 400);
+    ['spin', 'no-win', 'win', 'big-win', 'jackpot', 'game-over'].forEach((alias) => {
+      try {
+        ($sound?.find(alias) as unknown as { load?: () => void } | undefined)?.load?.();
+      } catch {
+        /* ignore */
+      }
+    });
   });
 };
 
