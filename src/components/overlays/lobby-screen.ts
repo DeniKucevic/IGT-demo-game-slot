@@ -12,7 +12,6 @@ const LABEL_CHIP_GAP = 10;
 const PAD = 24;
 const INNER_W = PANEL_W - PAD * 2;
 
-
 export type LobbySettings = {
   reelCount: number;
   rowCount: number;
