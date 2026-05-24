@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/igt-slot-game/:path*", "destination": "/:path*" }
+    { "source": "/igt-slot-game/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/igt-slot-game/:path*", "destination": "/index.html" }
   ]
 }
