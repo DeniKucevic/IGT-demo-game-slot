@@ -1,7 +1,7 @@
 import { REEL_GAP, ROW_GAP, type GameConfig } from './config';
 
-const HEADER_H = 48;
-const FOOTER_H = 128;
+export const HEADER_H = 48;
+export const FOOTER_H = 128;
 const H_PAD = 32;
 const V_PAD = 20;
 

@@ -1,4 +1,5 @@
 import './style.css';
+import '@pixi/layout';
 import { initDevtools } from '@pixi/devtools';
 import { Application } from 'pixi.js';
 

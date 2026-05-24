@@ -1,7 +1,10 @@
+import '@pixi/layout';
 import { Application, Container, Graphics, Text, TextStyle, Ticker } from 'pixi.js';
 
 import { COLORS, computeLayout, STRINGS } from '@shared';
 import type { GameConfig } from '@shared/config';
+import { FOOTER_H, HEADER_H } from '@shared/layout';
+
 import type { AppState } from '@core/state';
 import { getResponseData } from '@server/api';
 
@@ -18,12 +21,12 @@ import {
   BUTTON_HEIGHT,
 } from '@components';
 
-const HEADER_MID_Y = 24;
-const HEADER_H = 48;
+const HEADER_MID_Y = HEADER_H / 2;
 const TITLE_ANIM_INTERVAL = 1500;
 const BACK_BTN_W = 52;
 const BACK_BTN_H = 30;
 const BALANCE_X = BACK_BTN_W + 16;
+const CONTROLS_PAD_Y = 10;
 
 export const createGameSession = (
   config: GameConfig,
@@ -33,15 +36,17 @@ export const createGameSession = (
 ): void => {
   const scene = new Container();
   app.stage.addChild(scene);
+  scene.layout = { flexDirection: 'column', width: app.screen.width, height: app.screen.height };
 
-  const { symbolSize, reelW, reelsX, reelsY, controlsY } = computeLayout(
-    config,
-    app.screen.width,
-    app.screen.height,
-  );
+  const {
+    symbolSize: baseSymbolSize,
+    reelW,
+    reelH,
+    reelsX,
+  } = computeLayout(config, app.screen.width, app.screen.height);
 
   // ── UI components ──
-  const reelGroup = createReelGroup(config, symbolSize);
+  const reelGroup = createReelGroup(config, baseSymbolSize);
   const spinButton = createSpinButton();
   const allInButton = createAllInButton();
   const betSelector = createBetSelector(() => deactivateAllIn());
@@ -81,32 +86,81 @@ export const createGameSession = (
 
   drawBackBtn(false);
   backBtn.addChild(backBg, backTxt);
-  backBtn.position.set(8, Math.round((HEADER_H - BACK_BTN_H) / 2));
-
   backBtn.on('pointerover', () => drawBackBtn(true));
   backBtn.on('pointerout', () => drawBackBtn(false));
 
-  // ── Layout ──
-  const spinOffsetY = Math.round((betSelector.height - BUTTON_HEIGHT) / 2);
-  reelGroup.root.position.set(reelsX, reelsY);
-  betSelector.root.position.set(reelsX, controlsY);
-  allInButton.root.position.set(
-    reelsX + Math.round((reelW - ALLIN_SIZE) / 2),
-    controlsY + Math.round((betSelector.height - ALLIN_SIZE) / 2),
-  );
-  spinButton.root.position.set(reelsX + reelW - spinButton.width, controlsY + spinOffsetY);
+  // ── Header strip ──
+  const headerStrip = new Container();
+  headerStrip.layout = { width: '100%', height: HEADER_H };
+
+  backBtn.position.set(8, Math.round((HEADER_H - BACK_BTN_H) / 2));
   balanceDisplay.root.position.set(BALANCE_X, HEADER_MID_Y);
   gameTitle.root.position.set(app.screen.width / 2, HEADER_MID_Y);
   spinsDisplay.root.position.set(app.screen.width - 24, HEADER_MID_Y);
+  headerStrip.addChild(backBtn, balanceDisplay.root, gameTitle.root, spinsDisplay.root);
+  scene.addChild(headerStrip);
 
-  scene.addChild(reelGroup.root);
-  scene.addChild(betSelector.root, allInButton.root, spinButton.root);
-  scene.addChild(balanceDisplay.root, gameTitle.root, spinsDisplay.root);
-  scene.addChild(backBtn);
+  // ── Reels area ──
+  const reelsArea = new Container();
+  reelsArea.layout = {
+    flexGrow: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  };
+
+  const reelHolder = new Container();
+  reelHolder.layout = { width: reelW, height: reelH };
+  reelHolder.addChild(reelGroup.root);
+  reelsArea.addChild(reelHolder);
+  scene.addChild(reelsArea);
+
+  // ── Controls strip ──
+  const controlsStrip = new Container();
+  controlsStrip.layout = { width: '100%', height: FOOTER_H };
+
+  const spinOffsetY = Math.round((betSelector.height - BUTTON_HEIGHT) / 2);
+
+  const positionControls = (rx: number, rw: number): void => {
+    betSelector.root.position.set(rx, CONTROLS_PAD_Y);
+    allInButton.root.position.set(
+      rx + Math.round((rw - ALLIN_SIZE) / 2),
+      CONTROLS_PAD_Y + Math.round((betSelector.height - ALLIN_SIZE) / 2),
+    );
+    spinButton.root.position.set(rx + rw - spinButton.width, CONTROLS_PAD_Y + spinOffsetY);
+  };
+
+  positionControls(reelsX, reelW);
+  controlsStrip.addChild(betSelector.root, allInButton.root, spinButton.root);
+  scene.addChild(controlsStrip);
+
   scene.addChild(winPopup.root, gameOverScreen.root);
 
   updateBalance(state.balance);
   spinsDisplay.setValue(state.spinCount);
+
+  // ── Resize handler ──
+  const onResize = (w: number, h: number): void => {
+    scene.layout!.setStyle({ width: w, height: h });
+
+    const {
+      symbolSize,
+      reelW: newReelW,
+      reelH: newReelH,
+      reelsX: newReelsX,
+    } = computeLayout(config, w, h);
+
+    const scale = symbolSize / baseSymbolSize;
+    reelGroup.root.scale.set(scale);
+    reelHolder.layout!.setStyle({ width: newReelW, height: newReelH });
+
+    gameTitle.root.x = w / 2;
+    spinsDisplay.root.x = w - 24;
+
+    positionControls(newReelsX, newReelW);
+  };
+
+  app.renderer.on('resize', onResize);
 
   // ── Title animation ──
   const updateTitleAnimation = (ticker: Ticker): void => {
@@ -206,6 +260,7 @@ export const createGameSession = (
   const exitSession = (): void => {
     window.removeEventListener('keydown', onKeyDown);
     Ticker.shared.remove(updateTitleAnimation);
+    app.renderer.off('resize', onResize);
     scene.destroy({ children: true });
     onExit();
   };
