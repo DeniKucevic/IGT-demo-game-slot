@@ -56,7 +56,7 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
 
   const overlay = new Graphics();
   overlay.rect(0, 0, screenW, screenH);
-  overlay.fill({ color: '#000000', alpha: 0.5 });
+  overlay.fill({ color: COLORS.overlay, alpha: 0.5 });
   overlay.eventMode = 'static';
   overlay.cursor = 'pointer';
   root.addChild(overlay);
@@ -216,7 +216,7 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
 
   const resize = (w: number, h: number): void => {
     overlay.clear();
-    overlay.rect(0, 0, w, h).fill({ color: '#000000', alpha: 0.5 });
+    overlay.rect(0, 0, w, h).fill({ color: COLORS.overlay, alpha: 0.5 });
     panel.x = Math.round(w / 2);
     panel.y = Math.round(h / 2);
   };

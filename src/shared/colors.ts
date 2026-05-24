@@ -25,6 +25,8 @@ export const COLORS = {
   hint: '#888888',
   chipHover: '#ece8e3',
 
+  overlay: '#000000',
+
   // buttons
   btnFill: '#111111',
   btnFillHover: '#333333',
