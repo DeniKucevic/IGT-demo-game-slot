@@ -232,13 +232,53 @@ export const createLobbyScreen = (
   const playBtn = createButton(STRINGS.lobby.play, playBtnW);
   playBtn.root.position.set(PAD + soundBtnW + CHIP_GAP, curY);
   panel.addChild(playBtn.root);
-  curY += BUTTON_HEIGHT + PAD;
+  curY += BUTTON_HEIGHT + 16;
+
+  panel.addChild(new Graphics().rect(PAD, curY, INNER_W, 1).fill({ color: COLORS.hint }));
+  curY += 1 + 8;
+
+  const creditsOffsetY = curY;
+  curY += 14 + 12;
 
   const panelH = curY;
 
   panelBg.roundRect(0, 0, PANEL_W, panelH, 8);
   panelBg.fill({ color: COLORS.white });
   panelBg.stroke({ color: COLORS.black, width: 3 });
+
+  // HTML credits overlay
+  const makeLink = (text: string, href: string): HTMLAnchorElement => {
+    const a = document.createElement('a');
+    a.href = href;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = text;
+    Object.assign(a.style, { color: '#888888', textDecoration: 'none' });
+    a.addEventListener('mouseenter', () => {
+      a.style.color = '#000000';
+      a.style.textDecoration = 'underline';
+    });
+    a.addEventListener('mouseleave', () => {
+      a.style.color = '#888888';
+      a.style.textDecoration = 'none';
+    });
+    return a;
+  };
+
+  const creditsEl = document.createElement('div');
+  Object.assign(creditsEl.style, {
+    position: 'fixed',
+    fontFamily: 'monospace',
+    color: '#888888',
+    textAlign: 'center',
+    zIndex: '10',
+    pointerEvents: 'auto',
+    lineHeight: '1',
+  });
+  creditsEl.appendChild(makeLink('Denis Kucevic', 'https://deniskucevic.com'));
+  creditsEl.appendChild(document.createTextNode(' · '));
+  creditsEl.appendChild(makeLink('LinkedIn', 'https://www.linkedin.com/in/denis-kucevic'));
+  document.body.appendChild(creditsEl);
 
   // HTML input for credit (positioned over the canvas)
   const creditInput = document.createElement('input');
@@ -277,6 +317,10 @@ export const createLobbyScreen = (
     creditInput.style.width = `${INNER_W * panelScale}px`;
     creditInput.style.height = `${CHIP_H * panelScale}px`;
     creditInput.style.fontSize = `${Math.round(15 * panelScale)}px`;
+    creditsEl.style.left = `${px}px`;
+    creditsEl.style.top = `${py + creditsOffsetY * panelScale}px`;
+    creditsEl.style.width = `${PANEL_W * panelScale}px`;
+    creditsEl.style.fontSize = `${Math.round(11 * panelScale)}px`;
   };
 
   positionPanel(screenW, screenH);
@@ -318,6 +362,7 @@ export const createLobbyScreen = (
 
   const destroy = (): void => {
     creditInput.remove();
+    creditsEl.remove();
   };
 
   const resize = (w: number, h: number): void => positionPanel(w, h);
