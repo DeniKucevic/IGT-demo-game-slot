@@ -1,37 +1,36 @@
-import { sound } from '@pixi/sound';
+import type { SoundLibrary } from '@pixi/sound';
 
 import type { WinTier } from '@shared/types';
 
 const SOUND_PATH = '/assets/sounds';
-
-export const loadSounds = (): void => {
-  sound.add('click', { url: `${SOUND_PATH}/click.mp3`, preload: true });
-  sound.add('spin', { url: `${SOUND_PATH}/spin.wav`, preload: true });
-  sound.add('stop', { url: `${SOUND_PATH}/stop.wav`, preload: true });
-  sound.add('no-win', { url: `${SOUND_PATH}/no-win.wav`, preload: true });
-  sound.add('win', { url: `${SOUND_PATH}/win.wav`, preload: true });
-  sound.add('big-win', { url: `${SOUND_PATH}/big-win.wav`, preload: true });
-  sound.add('jackpot', { url: `${SOUND_PATH}/jackpot.wav`, preload: true });
-  sound.add('lobby', { url: `${SOUND_PATH}/lobby.wav`, preload: true });
-};
-
 const MUTED_KEY = 'slot-muted';
+const LOBBY_VOL_FULL = 0.35;
+const LOBBY_VOL_GAME = 0.05;
+
+// Populated on first user gesture via loadSounds() — dynamic import prevents
+// @pixi/sound from creating an AudioContext before a gesture occurs.
+let $sound: SoundLibrary | null = null;
 
 let muted = false;
+let tabVisible = true;
 let lobbyMusicActive = false;
+let lobbyVol = LOBBY_VOL_FULL;
+let spinSoundActive = false;
 
 export const getSavedMuted = (): boolean => localStorage.getItem(MUTED_KEY) === 'true';
 
 export const setMuted = (m: boolean): void => {
   muted = m;
   localStorage.setItem(MUTED_KEY, String(m));
-  if (m) sound.muteAll();
-  else sound.unmuteAll();
+  if (!$sound) return;
+  if (m) $sound.muteAll();
+  else $sound.unmuteAll();
 };
 
 const play = (alias: string, options?: { loop?: boolean; volume?: number }): void => {
+  if (!tabVisible || !$sound) return;
   try {
-    sound.play(alias, options as Parameters<typeof sound.play>[1]);
+    $sound.play(alias, options as Parameters<typeof $sound.play>[1]);
   } catch {
     // File missing or wrong format — fail silently
   }
@@ -42,13 +41,17 @@ export const playClick = (): void => {
 };
 
 export const playSpin = (): void => {
+  spinSoundActive = true;
   if (!muted) play('spin', { loop: true, volume: 0.6 });
 };
 
 export const stopSpin = (): void => {
+  spinSoundActive = false;
   try {
-    sound.stop('spin');
-  } catch { /* ignore */ }
+    $sound?.stop('spin');
+  } catch {
+    /* ignore */
+  }
 };
 
 export const playStop = (): void => {
@@ -69,21 +72,80 @@ export const playResult = (tier: WinTier | null): void => {
 export const playLobbyMusic = (): void => {
   if (muted) return;
   lobbyMusicActive = true;
-  if (sound.find('lobby')?.isPlaying) return;
-  play('lobby', { loop: true, volume: 0.35 });
+  if (!$sound) return; // loadSounds will start music once the import resolves
+  if ($sound.find('lobby')?.isPlaying) return;
+  play('lobby', { loop: true, volume: lobbyVol });
 };
 
 export const stopLobbyMusic = (): void => {
   lobbyMusicActive = false;
   try {
-    sound.stop('lobby');
-  } catch { /* ignore */ }
+    $sound?.stop('lobby');
+  } catch {
+    /* ignore */
+  }
 };
 
-// AudioContext is suspended when the tab is hidden — restart lobby music on focus return
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && lobbyMusicActive && !muted) {
-    try { sound.stop('lobby'); } catch { /* ignore */ }
-    play('lobby', { loop: true, volume: 0.35 });
+export const setLobbyVolume = (vol: number): void => {
+  lobbyVol = vol;
+  try {
+    const s = $sound?.find('lobby');
+    if (s) s.volume = vol;
+  } catch {
+    /* ignore */
   }
+};
+
+export const duckLobbyMusic = (): void => setLobbyVolume(LOBBY_VOL_GAME);
+export const unduckLobbyMusic = (): void => setLobbyVolume(LOBBY_VOL_FULL);
+
+export const loadSounds = (): void => {
+  import('@pixi/sound').then(({ sound }) => {
+    $sound = sound;
+    // Disable the built-in auto-pause so our visibilitychange handler has full
+    // control — otherwise @pixi/sound resumes stopped sounds on window refocus
+    // https://github.com/pixijs/sound/issues/258
+    $sound.disableAutoPause = true;
+    if (muted) $sound.muteAll();
+
+    $sound.add('lobby', `${SOUND_PATH}/lobby.wav`);
+    $sound.add('click', { url: `${SOUND_PATH}/click.mp3`, preload: true });
+    $sound.add('spin', { url: `${SOUND_PATH}/spin.wav`, preload: true });
+    $sound.add('stop', { url: `${SOUND_PATH}/stop.wav`, preload: true });
+    $sound.add('no-win', { url: `${SOUND_PATH}/no-win.wav`, preload: true });
+    $sound.add('win', { url: `${SOUND_PATH}/win.wav`, preload: true });
+    $sound.add('big-win', { url: `${SOUND_PATH}/big-win.wav`, preload: true });
+    $sound.add('jackpot', { url: `${SOUND_PATH}/jackpot.wav`, preload: true });
+
+    // playLobbyMusic may have been called on the same gesture before the import
+    // resolved — if so, start the music now that $sound is ready
+    if (lobbyMusicActive && !muted) {
+      play('lobby', { loop: true, volume: lobbyVol });
+    }
+  });
+};
+
+// When the tab hides, AudioContext suspends and rAF pauses (Ticker freezes).
+// Stop all looping sounds now so they don't ghost-play on return, and gate
+// one-shot plays via tabVisible so queued events don't fire on resume.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    tabVisible = false;
+    try {
+      $sound?.stop('spin');
+    } catch {
+      /* ignore */
+    }
+    try {
+      $sound?.stop('lobby');
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+
+  // Tab visible again — re-enable plays, then restart continuous sounds
+  tabVisible = true;
+  if (spinSoundActive && !muted) play('spin', { loop: true, volume: 0.6 });
+  if (lobbyMusicActive && !muted) play('lobby', { loop: true, volume: lobbyVol });
 });

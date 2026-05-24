@@ -15,6 +15,7 @@ import {
   getSavedMuted,
   playLobbyMusic,
   stopLobbyMusic,
+  duckLobbyMusic,
 } from '@core';
 
 import { createLobbyScreen, createLoadingScreen, type LobbySettings } from '@components';
@@ -52,7 +53,7 @@ const runGame = async (): Promise<void> => {
       app.screen.height,
       (s) => {
         app.renderer.off('resize', lobby.resize);
-        stopLobbyMusic();
+        duckLobbyMusic();
         lobby.destroy();
         app.stage.removeChild(lobby.root);
         resolve(s);

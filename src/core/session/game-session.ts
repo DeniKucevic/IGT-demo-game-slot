@@ -7,7 +7,7 @@ import { FOOTER_H, HEADER_H } from '@shared/layout';
 import type { WinTier } from '@shared/types';
 
 import type { AppState } from '@core/state';
-import { playClick, playSpin, stopSpin, playStop, playResult, setMuted } from '@core/sound';
+import { playClick, playSpin, stopSpin, playStop, playResult, setMuted, unduckLobbyMusic } from '@core/sound';
 import { getResponseData } from '@server/api';
 
 import {
@@ -324,6 +324,7 @@ export const createGameSession = (
     window.removeEventListener('keydown', onKeyDown);
     Ticker.shared.remove(updateTitleAnimation);
     app.renderer.off('resize', onResize);
+    unduckLobbyMusic();
     scene.destroy({ children: true });
     onExit();
   };
