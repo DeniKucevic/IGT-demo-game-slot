@@ -33,7 +33,8 @@ const play = (alias: string, options?: { loop?: boolean; volume?: number }): voi
     const result = $sound.play(alias, options as Parameters<typeof $sound.play>[1]);
     // play() returns a Promise when the sound hasn't loaded yet — catch rejections
     // so decode/network errors surface instead of disappearing silently
-    if (result instanceof Promise) result.catch((e) => console.warn(`[sound] "${alias}" failed:`, e));
+    if (result instanceof Promise)
+      result.catch((e) => console.warn(`[sound] "${alias}" failed:`, e));
   } catch (e) {
     console.warn(`[sound] "${alias}" failed:`, e);
   }
@@ -53,10 +54,13 @@ export const stopSpin = (): void => {
   // Defer the stop so any internal @pixi/sound error cannot block the
   // playStop() call that immediately follows at the call site
   Promise.resolve().then(() => {
-    try { $sound?.stop('spin'); } catch { /* ignore */ }
+    try {
+      $sound?.stop('spin');
+    } catch {
+      /* ignore */
+    }
   });
 };
-
 
 const WIN_TIER_SOUND: Record<WinTier, string> = {
   small: 'win',
@@ -126,6 +130,19 @@ export const loadSounds = (): void => {
     if (lobbyMusicActive && !muted) {
       play('lobby', { loop: true, volume: lobbyVol });
     }
+
+    // Pre-warm result sounds in the background so the first play is instant.
+    // Delayed 400ms to avoid a race with lobby/click which play on this gesture.
+    // Sound.load() exists at runtime but is absent from the v6 type definitions.
+    setTimeout(() => {
+      ['no-win', 'win', 'big-win', 'jackpot', 'game-over', 'spin'].forEach((alias) => {
+        try {
+          ($sound?.find(alias) as unknown as { load?: () => void } | undefined)?.load?.();
+        } catch {
+          /* ignore */
+        }
+      });
+    }, 400);
   });
 };
 

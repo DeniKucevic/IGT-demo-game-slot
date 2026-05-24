@@ -6,8 +6,16 @@ import type { GameConfig } from '@shared/config';
 import { FOOTER_H, HEADER_H } from '@shared/layout';
 import type { WinTier } from '@shared/types';
 
+import {
+  playClick,
+  playSpin,
+  stopSpin,
+  playResult,
+  playGameOver,
+  setMuted,
+  unduckLobbyMusic,
+} from '@core/sound';
 import type { AppState } from '@core/state';
-import { playClick, playSpin, stopSpin, playResult, playGameOver, setMuted, unduckLobbyMusic } from '@core/sound';
 import { getResponseData } from '@server/api';
 
 import {
@@ -94,7 +102,13 @@ export const createGameSession = (
   const drawBackBtn = (hover: boolean): void => {
     backBg.clear();
     backBg.roundRect(0, 0, BACK_BTN_W, BACK_BTN_H, 4);
-    backBg.fill({ color: backBtnDisabled ? COLORS.btnFillDisabled : hover ? COLORS.btnFillHover : COLORS.btnFill });
+    backBg.fill({
+      color: backBtnDisabled
+        ? COLORS.btnFillDisabled
+        : hover
+          ? COLORS.btnFillHover
+          : COLORS.btnFill,
+    });
     backTxt.style.fill = backBtnDisabled ? COLORS.hint : COLORS.white;
   };
 
@@ -106,7 +120,9 @@ export const createGameSession = (
 
   drawBackBtn(false);
   backBtn.addChild(backBg, backTxt);
-  backBtn.on('pointerover', () => { if (!backBtnDisabled) drawBackBtn(true); });
+  backBtn.on('pointerover', () => {
+    if (!backBtnDisabled) drawBackBtn(true);
+  });
   backBtn.on('pointerout', () => drawBackBtn(false));
 
   // ── Header strip ──
@@ -149,7 +165,10 @@ export const createGameSession = (
   const ctrlTotalH = Math.max(betSelector.height, ALLIN_SIZE, BUTTON_HEIGHT);
 
   betSelector.root.position.set(0, Math.round((ctrlTotalH - betSelector.height) / 2));
-  allInButton.root.position.set(BET_SELECTOR_WIDTH + CTRL_GAP, Math.round((ctrlTotalH - ALLIN_SIZE) / 2));
+  allInButton.root.position.set(
+    BET_SELECTOR_WIDTH + CTRL_GAP,
+    Math.round((ctrlTotalH - ALLIN_SIZE) / 2),
+  );
   spinButton.root.position.set(
     BET_SELECTOR_WIDTH + CTRL_GAP + ALLIN_SIZE + CTRL_GAP,
     Math.round((ctrlTotalH - BUTTON_HEIGHT) / 2),

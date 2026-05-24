@@ -138,7 +138,10 @@ const createSoundToggle = (w: number, initialMuted = false): SoundToggle => {
 
   let muted = initialMuted;
 
-  const txt = new Text({ text: initialMuted ? STRINGS.lobby.soundOff : STRINGS.lobby.soundOn, style: STYLES.btnLabel });
+  const txt = new Text({
+    text: initialMuted ? STRINGS.lobby.soundOff : STRINGS.lobby.soundOn,
+    style: STYLES.btnLabel,
+  });
   txt.anchor.set(0.5);
   txt.x = w / 2;
   txt.y = BUTTON_HEIGHT / 2;
