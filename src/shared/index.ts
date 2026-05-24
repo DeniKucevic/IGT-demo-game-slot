@@ -14,5 +14,5 @@ export { COLORS } from './colors';
 export type { WinTier, WinLine, ServerResponse } from './types';
 export { TIER_PRIZE_MULT, getWinTier } from './types';
 export { STRINGS, TIER_LABEL } from './strings';
-export { STYLES } from './styles';
+export { STYLES, FONTS } from './styles';
 export { computeLayout, type Layout } from './layout';

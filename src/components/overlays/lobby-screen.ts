@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 
-import { COLORS, STRINGS, STYLES } from '../../shared';
+import { COLORS, FONTS, STRINGS, STYLES } from '../../shared';
 import { BUTTON_HEIGHT, createButton } from '../common/button';
 
 const PANEL_W = 480;
@@ -261,7 +261,7 @@ export const createLobbyScreen = (
   const creditsEl = document.createElement('div');
   Object.assign(creditsEl.style, {
     position: 'fixed',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     color: COLORS.hint,
     textAlign: 'center',
     zIndex: '10',
@@ -283,7 +283,7 @@ export const createLobbyScreen = (
   creditInput.placeholder = '100 – 999999';
   Object.assign(creditInput.style, {
     position: 'fixed',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fontWeight: 'bold',
     color: COLORS.black,
     background: COLORS.white,

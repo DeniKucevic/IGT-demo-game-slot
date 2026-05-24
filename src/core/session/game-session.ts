@@ -1,7 +1,7 @@
 import '@pixi/layout';
-import { Application, Container, Graphics, Text, TextStyle, Ticker } from 'pixi.js';
+import { Application, Container, Graphics, Text, Ticker } from 'pixi.js';
 
-import { COLORS, computeLayout, STRINGS } from '@shared';
+import { COLORS, computeLayout, STRINGS, STYLES } from '@shared';
 import type { GameConfig } from '@shared/config';
 import { FOOTER_H, HEADER_H } from '@shared/layout';
 import type { WinTier } from '@shared/types';
@@ -89,8 +89,8 @@ export const createGameSession = (
 
   const backBg = new Graphics();
   const backTxt = new Text({
-    text: '< MENU',
-    style: new TextStyle({ fontSize: 11, fontFamily: 'monospace', fill: COLORS.white }),
+    text: STRINGS.header.back,
+    style: STYLES.backBtn,
   });
   backTxt.anchor.set(0.5);
   backTxt.x = BACK_BTN_W / 2;

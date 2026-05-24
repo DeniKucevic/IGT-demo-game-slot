@@ -5,6 +5,7 @@ export const STRINGS = {
     title: 'JACKPOT JAVA',
     balance: 'CREDIT',
     spins: 'SPINS',
+    back: '< MENU',
   },
   betSelector: {
     names: ['TALL', 'GRANDE', 'VENTI', 'TRENTA'],

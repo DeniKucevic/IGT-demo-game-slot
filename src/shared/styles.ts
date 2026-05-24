@@ -2,31 +2,36 @@ import { TextStyle } from 'pixi.js';
 
 import { COLORS } from './colors';
 
+export const FONTS = {
+  mono: 'monospace',
+  title: 'Tahoma',
+} as const;
+
 export const STYLES = {
   // Button
   btnLabel: new TextStyle({
     fontSize: 22,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.white,
   }),
 
   // Stat header
   statLabel: new TextStyle({
     fontSize: 10,
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.hint,
     letterSpacing: 1,
   }),
   statValue: new TextStyle({
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.black,
   }),
   headerTitle: new TextStyle({
     fill: COLORS.gold,
-    fontFamily: 'Tahoma',
+    fontFamily: FONTS.title,
     fontSize: 30,
     fontStyle: 'italic',
     fontWeight: 'bold',
@@ -37,38 +42,44 @@ export const STYLES = {
     },
   }),
 
+  backBtn: new TextStyle({
+    fontSize: 11,
+    fontFamily: FONTS.mono,
+    fill: COLORS.white,
+  }),
+
   // Lobby chip selector
   chipLabel: new TextStyle({
     fontSize: 15,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.black,
   }),
   chipActive: new TextStyle({
     fontSize: 15,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.white,
   }),
 
   // Bet selector cards
   cardName: new TextStyle({
     fontSize: 11,
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.black,
     letterSpacing: 0.5,
   }),
   cardValue: new TextStyle({
     fontSize: 11,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.black,
   }),
 
   // Small hint (spin button)
   hint: new TextStyle({
     fontSize: 11,
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.hint,
   }),
 
@@ -77,13 +88,13 @@ export const STYLES = {
   overlayHeadline: new TextStyle({
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.black,
     letterSpacing: 2,
   }),
   overlaySub: new TextStyle({
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.hint,
   }),
 
@@ -91,12 +102,12 @@ export const STYLES = {
   popupEmoji: new TextStyle({ fontSize: 22, fontFamily: 'monospace' }),
   popupRow: new TextStyle({
     fontSize: 13,
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.hint,
   }),
   popupMult: new TextStyle({
     fontSize: 13,
-    fontFamily: 'monospace',
+    fontFamily: FONTS.mono,
     fill: COLORS.black,
   }),
 
@@ -105,7 +116,7 @@ export const STYLES = {
     new TextStyle({
       fontSize: 13,
       fontWeight: 'bold',
-      fontFamily: 'monospace',
+      fontFamily: FONTS.mono,
       fill,
       letterSpacing: 2,
     }),
@@ -113,7 +124,7 @@ export const STYLES = {
     new TextStyle({
       fontSize: 20,
       fontWeight: 'bold',
-      fontFamily: 'monospace',
+      fontFamily: FONTS.mono,
       fill,
       letterSpacing: 2,
     }),
