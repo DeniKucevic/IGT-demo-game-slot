@@ -8,12 +8,12 @@ _CODENAME: SSGD (Simple Slot Game Demo)_
 
 ## CORE FEATURES
 
-- [ ] **Bet selector** - combo box (be creative, fit the game, show dev skills)
-- [ ] **Reels component (5x3 - or configurable)**
-  - [ ] Start spinning, spinning, stop spinning
-  - [ ] Speed up, slow down, bounce (free look and feel)
-- [ ] **Win display** - animated/highlighted win symbols, win value shown (free look and feel)
-- [ ] **Mocked server** - separate class/module, returns JSON with stop positions, winning lines, prize info
+- [x] **Bet selector** - combo box (be creative, fit the game, show dev skills)
+- [x] **Reels component (5x3 - or configurable)**
+  - [x] Start spinning, spinning, stop spinning
+  - [x] Speed up, slow down, bounce (free look and feel)
+- [x] **Win display** - animated/highlighted win symbols, win value shown (free look and feel)
+- [x] **Mocked server** - separate class/module, returns JSON with stop positions, winning lines, prize info
   ```js
   mockedServer.getResponseData(); // returns result as JSON
   ```
@@ -172,28 +172,78 @@ Day 5 - 2026-05-23 | Bet selector & other UI elements
 
 ## TASKS FOR TODAY
 
-- [ ] **Bet selector** - getResponseData() returns stop positions, winning lines, prize as JSON
-- [ ] **Number of spins** - evaluateLines(), left-to-right consecutive match?, ratio-based tier?
-- [ ] **Balance?** - triggers spin, disabled during animation
-- [ ] **Project structure** - review the current structure
-- [ ] **Testing**
+- [x] **Bet selector** - getResponseData() returns stop positions, winning lines, prize as JSON
+- [x] **Number of spins** - evaluateLines(), left-to-right consecutive match?, ratio-based tier?
+- [x] **Balance?** - triggers spin, disabled during animation
+- [x] **Project structure** - review the current structure
+- [] **Testing**
 
 ### What I did
 
 - There was a bug where the position number could grow out of hand during a very long gameplay, we reset the position to the actual position of the reel so the number is allways small
 - Since we are mocking the server we should also think about issues that come with it, for example we need a response from server to know the status of the win or not, in case that response does not come we need a solution so a random no-win position makes sense to me. This is enough for demo even tho in production this would need more cases and probably some failsafe so the players (I am already adapting to lingo and saying players instead of useds :D) are not stuck forever in that loop. Maybe like if we get no response in 4 spins we show some error screen?
-- T
+- Implemented a lobby screen, before the game start player can see settings
+- Added eslint and prettier formatter
+- Lot of refactoring, we grew quite a lot of code
 
 ### Decisions & reasoning
 
-- **Virtual scroll over long strip** - If I kept the original idea there was a problem that if this was in prodaction and server halted the response we could run out of strip and UI would break, if this was waiting for a response from server. If we do it like pixi.js example we can keep the spin phase as long as we want. I mean not a final solution but still better then broken UI.
+- **Lobby screen** - We need a place for a configurations (credit, reels/rows) and a game did not feel finished without a lobby screen.
+- **Jackpot java** - The game deserver a proper name now that we have actual game running
+- **Chips** - We used coffee cups as chip component for bet selecting so on config screen we are doing the same only for credit we are doing input screen, it feels proper to input a number of credit over selecting a predefined amounts. Also easier for me to test with random numbers
+- **All in button** - I wanted to test running out of credits and spending more then limits fast and easy and then decided to keep the button because it turned out to be way more fun then expected.
 
 ### Problems & solutions
 
-- Reels couldn't spin indefinitely - long strip has a fixed end. Virtual scroll has no end; position grows unbounded and modulo handles wrapping.
+- Negative balance bug - player could bet 100 credits with only 50 in balance. Fixed on two fronts: `setMaxBet` on bet selector auto-downgrades the selected option and greys out unaffordable ones
+
+- All-in visual flash - pressing Spin while in all-in mode caused the gold border to briefly flicker back to the last selected cup.
+
+- Game-over "Play Again" stayed in game - clicking Play Again was calling `resetGame()` which re-initialised the game with the same config instead of returning to the lobby.
+
+- HTML credit input positioning - needed to overlay a native `<input>` on top of the PixiJS canvas. Since the canvas fills the full viewport, `position: fixed` with coordinates derived from the panel's computed Pixi position worked correctly across zoom levels.
 
 ### Next up
 
-- Bet selector (dropdown/combo box)
+- Refactor `main.ts` (session logic into own module)
+- Responsive design with `@pixi/layout`
+- Tests
+- Sound
+- Polish
+
+---
+
+## Day 6 - 2026-05-24 | Refactor & Responsiveness
+
+## TASKS FOR TODAY
+
+- [x] **Refactor `main.ts`** - extract session logic into `createGameSession()`
+- [x] **Responsiveness** - `@pixi/layout` for scene structure, resize handler
+
+### What I did
+
+- Extracted everything inside `runGame()` after lobby resolution into `src/core/session/game-session.ts` as a `createGameSession(config, state, app, onExit)` factory. `main.ts` is now ~40 lines of pure orchestration.
+- Installed `@pixi/layout` (Yoga-powered CSS flexbox for PixiJS). Scene is now a `flexDirection: column` layout container: header strip (fixed 48 px), reels area (`flexGrow: 1`, `justifyContent/alignItems: center`), controls strip (fixed 128 px).
+- On `app.renderer` resize: scene dimensions update, reel group is scaled by `newSymbolSize / baseSymbolSize`, reel holder Yoga bounding box is updated so centering stays correct, header items and controls repositioned.
+- Fixed silent crash risk: if `getResponseData` threw, the game froze in spinning state with controls permanently disabled. Added `endRound()` to the catch block.
+
+### Decisions & reasoning
+
+- **`createGameSession` returns `void`, not an object** - the session manages its own lifecycle (owns the scene container, registers/removes all listeners). No external handle needed; the caller just provides an `onExit` callback.
+- **Scale approach for reel resize, not recreation** - recreating the reel group on every resize would reset animation state and be jarring. Scaling the container is visually clean for a demo; gap sizes scale proportionally rather than staying fixed, which is an acceptable trade-off.
+- **`reelHolder` wrapper instead of layout on `reelGroup.root`** - giving `@pixi/layout` a separate holder container tells Yoga the bounding box for centering without the layout system interfering with the reel group's internal pixel coordinates or mask.
+- **Event emitter / PubSub skipped** - would add abstraction without solving a concrete problem at this scale. Direct function calls remain clear and fully type-safe.
+
+### Problems & solutions
+
+- **`@pixi/layout` scale conflict concern** - if `.layout` is set directly on `reelGroup.root`, the layout system might apply its own scale and conflict with manual scaling. Resolved by wrapping in a `reelHolder` container: Yoga manages the holder's position/size, `reelGroup.root` inside has no layout and is scaled freely.
+
+- **Import ordering + Prettier formatting** - ESLint reported `@shared` sub-path imports must follow `@shared` barrel imports, and two `computeLayout` destructuring calls needed line-wrapping per printWidth 100. Fixed both.
+
+### Next up
+
+- Tests
+- Sound
+- Polish (lobby resize, overlay resize on window change)
 
 ---
