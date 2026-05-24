@@ -1,4 +1,4 @@
-import type { SoundLibrary } from '@pixi/sound';
+import { sound } from '@pixi/sound';
 
 import type { WinTier } from '@shared/types';
 
@@ -7,10 +7,7 @@ const MUTED_KEY = 'slot-muted';
 const LOBBY_VOL_FULL = 0.35;
 const LOBBY_VOL_GAME = 0.05;
 
-// Populated on first user gesture via loadSounds() — dynamic import prevents
-// @pixi/sound from creating an AudioContext before a gesture occurs.
-let $sound: SoundLibrary | null = null;
-
+let soundsLoaded = false;
 let muted = false;
 let tabVisible = true;
 let lobbyMusicActive = false;
@@ -22,17 +19,15 @@ export const getSavedMuted = (): boolean => localStorage.getItem(MUTED_KEY) === 
 export const setMuted = (m: boolean): void => {
   muted = m;
   localStorage.setItem(MUTED_KEY, String(m));
-  if (!$sound) return;
-  if (m) $sound.muteAll();
-  else $sound.unmuteAll();
+  if (!soundsLoaded) return;
+  if (m) sound.muteAll();
+  else sound.unmuteAll();
 };
 
 const play = (alias: string, options?: { loop?: boolean; volume?: number }): void => {
-  if (!tabVisible || !$sound) return;
+  if (!soundsLoaded || !tabVisible) return;
   try {
-    const result = $sound.play(alias, options as Parameters<typeof $sound.play>[1]);
-    // play() returns a Promise when the sound hasn't loaded yet — catch rejections
-    // so decode/network errors surface instead of disappearing silently
+    const result = sound.play(alias, options as Parameters<typeof sound.play>[1]);
     if (result instanceof Promise)
       result.catch((e) => console.warn(`[sound] "${alias}" failed:`, e));
   } catch (e) {
@@ -51,11 +46,9 @@ export const playSpin = (): void => {
 
 export const stopSpin = (): void => {
   spinSoundActive = false;
-  // Defer the stop so any internal @pixi/sound error cannot block the
-  // playStop() call that immediately follows at the call site
   Promise.resolve().then(() => {
     try {
-      $sound?.stop('spin');
+      sound.stop('spin');
     } catch {
       /* ignore */
     }
@@ -80,15 +73,15 @@ export const playGameOver = (): void => {
 export const playLobbyMusic = (): void => {
   if (muted) return;
   lobbyMusicActive = true;
-  if (!$sound) return; // loadSounds will start music once the import resolves
-  if ($sound.find('lobby')?.isPlaying) return;
+  if (!soundsLoaded) return;
+  if (sound.find('lobby')?.isPlaying) return;
   play('lobby', { loop: true, volume: lobbyVol });
 };
 
 export const stopLobbyMusic = (): void => {
   lobbyMusicActive = false;
   try {
-    $sound?.stop('lobby');
+    sound.stop('lobby');
   } catch {
     /* ignore */
   }
@@ -97,7 +90,7 @@ export const stopLobbyMusic = (): void => {
 export const setLobbyVolume = (vol: number): void => {
   lobbyVol = vol;
   try {
-    const s = $sound?.find('lobby');
+    const s = sound.find('lobby');
     if (s) s.volume = vol;
   } catch {
     /* ignore */
@@ -108,40 +101,41 @@ export const duckLobbyMusic = (): void => setLobbyVolume(LOBBY_VOL_GAME);
 export const unduckLobbyMusic = (): void => setLobbyVolume(LOBBY_VOL_FULL);
 
 export const loadSounds = (): void => {
-  import('@pixi/sound').then(({ sound }) => {
-    $sound = sound;
-    // Disable the built-in auto-pause so our visibilitychange handler has full
-    // control — otherwise @pixi/sound resumes stopped sounds on window refocus
-    // https://github.com/pixijs/sound/issues/258
-    $sound.disableAutoPause = true;
-    if (muted) $sound.muteAll();
+  // iOS Safari requires AudioContext.resume() to be called synchronously inside a
+  // gesture handler. A dynamic import delays past the gesture window and silences
+  // all audio on iPhone. Resuming here (static import) fixes that.
+  try {
+    (sound.context as unknown as { audioContext?: AudioContext }).audioContext?.resume();
+  } catch {
+    /* ignore */
+  }
 
-    $sound.add('lobby', `${SOUND_PATH}/lobby.wav`);
-    $sound.add('click', `${SOUND_PATH}/click.mp3`);
-    $sound.add('spin', `${SOUND_PATH}/spin.wav`);
-    $sound.add('no-win', `${SOUND_PATH}/no-win.wav`);
-    $sound.add('win', `${SOUND_PATH}/win.wav`);
-    $sound.add('big-win', `${SOUND_PATH}/big-win.wav`);
-    $sound.add('jackpot', `${SOUND_PATH}/jackpot.wav`);
-    $sound.add('game-over', `${SOUND_PATH}/game-over.wav`);
+  soundsLoaded = true;
+  sound.disableAutoPause = true;
+  if (muted) sound.muteAll();
 
-    // playLobbyMusic may have been called on the same gesture before the import
-    // resolved — if so, start the music now that $sound is ready
-    if (lobbyMusicActive && !muted) {
-      play('lobby', { loop: true, volume: lobbyVol });
+  sound.add('lobby', `${SOUND_PATH}/lobby.wav`);
+  sound.add('click', `${SOUND_PATH}/click.mp3`);
+  sound.add('spin', `${SOUND_PATH}/spin.wav`);
+  sound.add('no-win', `${SOUND_PATH}/no-win.wav`);
+  sound.add('win', `${SOUND_PATH}/win.wav`);
+  sound.add('big-win', `${SOUND_PATH}/big-win.wav`);
+  sound.add('jackpot', `${SOUND_PATH}/jackpot.wav`);
+  sound.add('game-over', `${SOUND_PATH}/game-over.wav`);
+
+  if (lobbyMusicActive && !muted) {
+    play('lobby', { loop: true, volume: lobbyVol });
+  }
+
+  // Pre-warm sounds that won't play on this gesture so their first play is instant.
+  // lobby and click are excluded — they may play on this same gesture.
+  // Sound.load() exists at runtime but is absent from the v6 type definitions.
+  ['spin', 'no-win', 'win', 'big-win', 'jackpot', 'game-over'].forEach((alias) => {
+    try {
+      (sound.find(alias) as unknown as { load?: () => void } | undefined)?.load?.();
+    } catch {
+      /* ignore */
     }
-
-    // Pre-warm sounds that won't play on this gesture so their first play is instant.
-    // lobby and click are excluded — they play immediately and sharing a decode call
-    // with load() on the same gesture causes an AudioBufferSourceNode.buffer crash.
-    // Sound.load() exists at runtime but is absent from the v6 type definitions.
-    ['spin', 'no-win', 'win', 'big-win', 'jackpot', 'game-over'].forEach((alias) => {
-      try {
-        ($sound?.find(alias) as unknown as { load?: () => void } | undefined)?.load?.();
-      } catch {
-        /* ignore */
-      }
-    });
   });
 };
 
@@ -152,12 +146,12 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     tabVisible = false;
     try {
-      $sound?.stop('spin');
+      sound.stop('spin');
     } catch {
       /* ignore */
     }
     try {
-      $sound?.stop('lobby');
+      sound.stop('lobby');
     } catch {
       /* ignore */
     }
