@@ -37,8 +37,8 @@ export const createTitleDisplay = (label: string): TitleDisplay => {
     letterText.y = LETTER_HEIGHT / 2;
 
     const blurFilter = new BlurFilter();
-    blurFilter.blurX = 0;
-    blurFilter.blurY = 0;
+    blurFilter.strengthX = 0;
+    blurFilter.strengthY = 0;
     letterText.filters = [blurFilter];
 
     const mask = new Graphics()
@@ -71,13 +71,13 @@ export const createTitleDisplay = (label: string): TitleDisplay => {
       letter.spinProgress += ticker.deltaMS;
       const angle = (letter.spinProgress / SPIN_DURATION) * Math.PI * 4;
       letter.textNode.y = letter.startY + Math.sin(angle) * (LETTER_HEIGHT * 0.8);
-      letter.blurFilter.blurY = Math.abs(Math.cos(angle)) * 6;
+      letter.blurFilter.strengthY = Math.abs(Math.cos(angle)) * 6;
 
       if (letter.spinProgress >= SPIN_DURATION) {
         letter.isSpinning = false;
         letter.spinProgress = 0;
         letter.textNode.y = letter.startY;
-        letter.blurFilter.blurY = 0;
+        letter.blurFilter.strengthY = 0;
       }
     });
   };

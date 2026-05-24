@@ -169,7 +169,7 @@ export const createLobbyScreen = (
 ): LobbyScreen => {
   const root = new Container();
 
-  const screenBg = new Graphics().rect(0, 0, screenW, screenH).fill({ color: COLORS.background });
+  const screenBg = new Graphics();
   screenBg.eventMode = 'static';
   root.addChild(screenBg);
 
@@ -231,10 +231,6 @@ export const createLobbyScreen = (
   panelBg.fill({ color: COLORS.white });
   panelBg.stroke({ color: COLORS.black, width: 3 });
 
-  const panelX = Math.round(screenW / 2 - PANEL_W / 2);
-  const panelY = Math.round(screenH / 2 - panelH / 2);
-  panel.position.set(panelX, panelY);
-
   // HTML input for credit (positioned over the canvas)
   const creditInput = document.createElement('input');
   creditInput.type = 'text';
@@ -245,12 +241,7 @@ export const createLobbyScreen = (
   creditInput.placeholder = '100 – 999999';
   Object.assign(creditInput.style, {
     position: 'fixed',
-    left: `${panelX + PAD}px`,
-    top: `${panelY + creditInputOffsetY}px`,
-    width: `${INNER_W}px`,
-    height: `${CHIP_H}px`,
     fontFamily: 'monospace',
-    fontSize: '15px',
     fontWeight: 'bold',
     color: COLORS.black,
     background: COLORS.white,
@@ -261,6 +252,25 @@ export const createLobbyScreen = (
     outline: 'none',
     zIndex: '10',
   });
+
+  const positionPanel = (w: number, h: number): void => {
+    screenBg.clear();
+    screenBg.rect(0, 0, w, h).fill({ color: COLORS.background });
+    const panelScale = Math.min(1, (w - 32) / PANEL_W);
+    panel.scale.set(panelScale);
+    const scaledW = PANEL_W * panelScale;
+    const scaledH = panelH * panelScale;
+    const px = Math.round(w / 2 - scaledW / 2);
+    const py = Math.max(8, Math.round(h / 2 - scaledH / 2));
+    panel.position.set(px, py);
+    creditInput.style.left = `${px + PAD * panelScale}px`;
+    creditInput.style.top = `${py + creditInputOffsetY * panelScale}px`;
+    creditInput.style.width = `${INNER_W * panelScale}px`;
+    creditInput.style.height = `${CHIP_H * panelScale}px`;
+    creditInput.style.fontSize = `${Math.round(15 * panelScale)}px`;
+  };
+
+  positionPanel(screenW, screenH);
   // Block non-digit keystrokes
   creditInput.addEventListener('keydown', (e) => {
     const nav = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
@@ -301,15 +311,7 @@ export const createLobbyScreen = (
     creditInput.remove();
   };
 
-  const resize = (w: number, h: number): void => {
-    screenBg.clear();
-    screenBg.rect(0, 0, w, h).fill({ color: COLORS.background });
-    const newPanelX = Math.round(w / 2 - PANEL_W / 2);
-    const newPanelY = Math.round(h / 2 - panelH / 2);
-    panel.position.set(newPanelX, newPanelY);
-    creditInput.style.left = `${newPanelX + PAD}px`;
-    creditInput.style.top = `${newPanelY + creditInputOffsetY}px`;
-  };
+  const resize = (w: number, h: number): void => positionPanel(w, h);
 
   return { root, destroy, resize };
 };

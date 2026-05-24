@@ -27,6 +27,8 @@ const TITLE_ANIM_INTERVAL = 1500;
 const BACK_BTN_W = 52;
 const BACK_BTN_H = 30;
 const BALANCE_X = BACK_BTN_W + 16;
+const CTRL_GAP = 16;
+const TITLE_MIN_W = 560;
 
 export const createGameSession = (
   config: GameConfig,
@@ -42,7 +44,6 @@ export const createGameSession = (
     symbolSize: baseSymbolSize,
     reelW,
     reelH,
-    reelsX,
   } = computeLayout(config, app.screen.width, app.screen.height);
 
   // ── UI components ──
@@ -102,6 +103,7 @@ export const createGameSession = (
 
   const gameTitleWrapper = new Container();
   gameTitleWrapper.layout = { position: 'absolute', left: '50%', top: 0 };
+  gameTitleWrapper.visible = app.screen.width >= TITLE_MIN_W;
   gameTitle.root.position.set(0, HEADER_MID_Y);
   gameTitleWrapper.addChild(gameTitle.root);
 
@@ -128,33 +130,39 @@ export const createGameSession = (
   reelsArea.addChild(reelHolder);
   scene.addChild(reelsArea);
 
-  // ── Controls strip: flex row, padded to match reel group width ──
+  // ── Controls strip ──
+  const ctrlTotalW = BET_SELECTOR_WIDTH + CTRL_GAP + ALLIN_SIZE + CTRL_GAP + spinButton.width;
+  const ctrlTotalH = Math.max(betSelector.height, ALLIN_SIZE, BUTTON_HEIGHT);
+
+  betSelector.root.position.set(0, Math.round((ctrlTotalH - betSelector.height) / 2));
+  allInButton.root.position.set(BET_SELECTOR_WIDTH + CTRL_GAP, Math.round((ctrlTotalH - ALLIN_SIZE) / 2));
+  spinButton.root.position.set(
+    BET_SELECTOR_WIDTH + CTRL_GAP + ALLIN_SIZE + CTRL_GAP,
+    Math.round((ctrlTotalH - BUTTON_HEIGHT) / 2),
+  );
+
+  const controlsGroup = new Container();
+  controlsGroup.addChild(betSelector.root, allInButton.root, spinButton.root);
+
   const controlsStrip = new Container();
-  controlsStrip.layout = {
-    width: '100%',
-    height: FOOTER_H,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingLeft: reelsX,
-    paddingRight: reelsX,
+  controlsStrip.layout = { width: '100%', height: FOOTER_H };
+
+  const initialCtrlScale = Math.min(1, app.screen.width / ctrlTotalW);
+  const initialScaledW = ctrlTotalW * initialCtrlScale;
+  const initialScaledH = ctrlTotalH * initialCtrlScale;
+  controlsGroup.scale.set(initialCtrlScale);
+  controlsGroup.layout = {
+    position: 'absolute',
+    left: Math.round((app.screen.width - initialScaledW) / 2),
+    top: Math.round((FOOTER_H - initialScaledH) / 2),
   };
-
-  // flexShrink: 0 prevents @pixi/layout from squeezing items below their natural size.
-  betSelector.root.layout = { width: BET_SELECTOR_WIDTH, height: betSelector.height, flexShrink: 0 };
-  allInButton.root.layout = { width: ALLIN_SIZE, height: ALLIN_SIZE, flexShrink: 0 };
-  spinButton.root.layout = { width: spinButton.width, height: BUTTON_HEIGHT, flexShrink: 0 };
-
-  controlsStrip.addChild(betSelector.root, allInButton.root, spinButton.root);
+  controlsStrip.addChild(controlsGroup);
   scene.addChild(controlsStrip);
 
   scene.addChild(winPopup.root, gameOverScreen.root);
 
   updateBalance(state.balance);
   spinsDisplay.setValue(state.spinCount);
-
-  // Minimum content width for the three controls; padding shrinks to 0 before items overflow.
-  const ctrlMinContentW = BET_SELECTOR_WIDTH + ALLIN_SIZE + spinButton.width + 32;
 
   // ── Resize handler ──
   const onResize = (w: number, h: number): void => {
@@ -164,16 +172,22 @@ export const createGameSession = (
       symbolSize,
       reelW: newReelW,
       reelH: newReelH,
-      reelsX: newReelsX,
     } = computeLayout(config, w, h);
 
     const scale = symbolSize / baseSymbolSize;
     reelGroup.root.scale.set(scale);
     reelHolder.layout!.setStyle({ width: newReelW, height: newReelH });
 
-    // Clamp padding so controls never overflow on narrow screens.
-    const pad = Math.min(newReelsX, Math.max(0, Math.floor((w - ctrlMinContentW) / 2)));
-    controlsStrip.layout!.setStyle({ paddingLeft: pad, paddingRight: pad });
+    const ctrlScale = Math.min(1, w / ctrlTotalW);
+    const scaledW = ctrlTotalW * ctrlScale;
+    const scaledH = ctrlTotalH * ctrlScale;
+    controlsGroup.scale.set(ctrlScale);
+    controlsGroup.layout!.setStyle({
+      left: Math.round((w - scaledW) / 2),
+      top: Math.round((FOOTER_H - scaledH) / 2),
+    });
+
+    gameTitleWrapper.visible = w >= TITLE_MIN_W;
   };
 
   app.renderer.on('resize', onResize);
