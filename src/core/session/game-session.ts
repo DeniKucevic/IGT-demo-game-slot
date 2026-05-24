@@ -4,8 +4,10 @@ import { Application, Container, Graphics, Text, TextStyle, Ticker } from 'pixi.
 import { COLORS, computeLayout, STRINGS } from '@shared';
 import type { GameConfig } from '@shared/config';
 import { FOOTER_H, HEADER_H } from '@shared/layout';
+import type { WinTier } from '@shared/types';
 
 import type { AppState } from '@core/state';
+import { playClick, playSpin, stopSpin, playStop, playResult, setMuted } from '@core/sound';
 import { getResponseData } from '@server/api';
 
 import {
@@ -21,6 +23,10 @@ import {
   BET_SELECTOR_WIDTH,
   BUTTON_HEIGHT,
 } from '@components';
+
+const TIER_ORDER: WinTier[] = ['small', 'win', 'bigwin', 'jackpot'];
+const topWinTier = (tiers: WinTier[]): WinTier =>
+  tiers.reduce((best, t) => (TIER_ORDER.indexOf(t) > TIER_ORDER.indexOf(best) ? t : best));
 
 const HEADER_MID_Y = HEADER_H / 2;
 const TITLE_ANIM_INTERVAL = 1500;
@@ -177,6 +183,7 @@ export const createGameSession = (
 
   updateBalance(state.balance);
   spinsDisplay.setValue(state.spinCount);
+  setMuted(state.muted);
 
   // ── Resize handler ──
   const onResize = (w: number, h: number): void => {
@@ -258,28 +265,35 @@ export const createGameSession = (
 
     reelGroup.clearHighlights();
     reelGroup.spin();
+    playSpin();
 
     try {
       const result = await getResponseData(config);
 
       reelGroup.land(result.reelPositions, () => {
+        stopSpin();
+        playStop();
         if (result.winningLines.length > 0) {
           state.gameState = 'showing-win';
           updateBalance(state.balance + result.prize * bet);
           reelGroup.highlightWins(result.winningLines);
+          playResult(topWinTier(result.winningLines.map((l) => l.tier)));
           winPopup.show(result.winningLines, result.prize, endRound);
         } else {
+          playResult(null);
           endRound();
         }
       });
     } catch (error) {
       console.error(error);
+      stopSpin();
       endRound();
     }
   };
 
   // ── Input handlers ──
   allInButton.root.on('pointertap', () => {
+    playClick();
     state.isAllIn = !state.isAllIn;
     allInButton.setActive(state.isAllIn);
     spinButton.setAllIn(state.isAllIn);
@@ -308,6 +322,7 @@ export const createGameSession = (
 
   backBtn.on('pointertap', () => {
     if (state.gameState !== 'idle') return;
+    playClick();
     exitSession();
   });
 };

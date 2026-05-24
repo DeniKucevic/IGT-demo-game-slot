@@ -166,6 +166,7 @@ export const createLobbyScreen = (
   screenW: number,
   screenH: number,
   onPlay: (settings: LobbySettings) => void,
+  onMuteToggle?: (muted: boolean) => void,
 ): LobbyScreen => {
   const root = new Container();
 
@@ -217,6 +218,7 @@ export const createLobbyScreen = (
   const playBtnW = INNER_W - soundBtnW - CHIP_GAP;
 
   const soundToggle = createSoundToggle(soundBtnW);
+  soundToggle.root.on('pointertap', () => onMuteToggle?.(soundToggle.getMuted()));
   soundToggle.root.position.set(PAD, curY);
   panel.addChild(soundToggle.root);
 
