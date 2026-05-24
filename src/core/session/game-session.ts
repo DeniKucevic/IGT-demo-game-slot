@@ -181,6 +181,7 @@ export const createGameSession = (
       });
     } catch (error) {
       console.error(error);
+      endRound();
     }
   };
 
