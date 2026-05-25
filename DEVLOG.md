@@ -267,15 +267,26 @@ Day 5 - 2026-05-23 | Bet selector & other UI elements
 
 ### Decisions & reasoning
 
-- **`win-math.ts` split from `types.ts`** — runtime logic with testable conditions does not belong in a types file.
-- **Header extracted to its own component** — the back button and layout strip was inside a session orchestrator. `createGameHeader(onBack)` makes the dependency explicit and keeps `game-session.ts` focused on game flow, not UI construction.
-- **`common/` only gets truly shared primitives** — `createButton` is in `common/` because it is used by `ui/`, `overlays/game-over`, and `overlays/lobby-screen`. Chips and sound toggle are lobby-only so they stay in `overlays/`.
+- **`win-math.ts` split from `types.ts`** - runtime logic with testable conditions does not belong in a types file.
+- **Header extracted to its own component** - the back button and layout strip was inside a session orchestrator. `createGameHeader(onBack)` makes the dependency explicit and keeps `game-session.ts` focused on game flow, not UI construction.
+- **`common/` only gets truly shared primitives** - `createButton` is in `common/` because it is used by `ui/`, `overlays/game-over`, and `overlays/lobby-screen`. Chips and sound toggle are lobby-only so they stay in `overlays/`.
 
 ### Problems & solutions
 
-- **`vite.config.ts` `base` applied to dev server** — setting `base: '/igt-slot-game/'` for Vercel also moved the dev server off root, which was inconvenient. Fixed with `({ command }) => ({ base: command === 'build' ? '/igt-slot-game/' : '/' })`.
-
+- **`vite.config.ts` `base` applied to dev server** - setting `base: '/igt-slot-game/'` for Vercel also moved the dev server off root, which was inconvenient. Fixed with `({ command }) => ({ base: command === 'build' ? '/igt-slot-game/' : '/' })`.
 
 ### Next up
 
 - n/a
+
+---
+
+## Final thoughts
+
+This was a genuinely difficult task to complete - not because of the technical complexity alone, but because I was balancing it alongside a full-time job and family. Getting it across the finish line in time means a lot to me personally.
+
+I learned more about the iGaming industry in these few days than I expected. The math behind reels, RTP, symbol weighting, and why virtual scroll exists over a long strip - none of that was obvious going in. PixiJS surprised me too. I came in thinking it would feel limiting compared to a DOM-based stack, but the Ticker-driven model and the factory pattern clicked quickly and I genuinely enjoyed working with it.
+
+A few things I wish I had time for: proper symbol weights (right now every symbol has equal probability, which is not how real slots work), and most of all - a real backend. The mocked server does its job but the interesting problems live on the other side: certified RNG, session management, real win evaluation, regulatory compliance. I'd love to get my hands on that side of it.
+
+Thank you IGT for putting together a brief that was actually fun to build. I'd love to get my hands on a real game one day.

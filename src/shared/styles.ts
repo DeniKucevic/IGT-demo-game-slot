@@ -102,7 +102,7 @@ export const STYLES = {
     fill: COLORS.hint,
   }),
 
-  // Win popup — static
+  // Win popup - static
   popupEmoji: new TextStyle({ fontSize: 22, fontFamily: 'monospace' }),
   popupRow: new TextStyle({
     fontSize: 13,
@@ -115,7 +115,7 @@ export const STYLES = {
     fill: COLORS.black,
   }),
 
-  // Win popup — dynamic fill (tier color varies per call)
+  // Win popup - dynamic fill (tier color varies per call)
   popupTier: (fill: string): TextStyle =>
     new TextStyle({
       fontSize: 13,

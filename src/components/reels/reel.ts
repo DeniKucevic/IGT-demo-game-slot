@@ -47,7 +47,7 @@ const easeOutBounce = (t: number): number => {
 
 /**
  * Single reel column. Scrolls a virtual strip of symbols using PixiJS Ticker.
- * `spin()` and `land()` are decoupled — start the spin immediately, call `land()`
+ * `spin()` and `land()` are decoupled - start the spin immediately, call `land()`
  * whenever the server responds. If no `land()` arrives within FAILSAFE_TIMEOUT,
  * the reel stops at `failsafePos` automatically.
  * @param reelIndex - Column index (0-based); selects the strip from REEL_STRIPS.

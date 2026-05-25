@@ -1,12 +1,12 @@
-# IGT Demo Slot Game
+# IGT Demo Slot Game 🎰
 
 A configurable slot machine demo built with PixiJS 8, TypeScript, and Vite.
 
 ## Stack
 
-- **PixiJS 8** — WebGL/Canvas rendering
-- **@pixi/sound** — Web Audio with autoplay-policy compliance
-- **@pixi/layout** — Yoga-based flexbox layout
+- **PixiJS 8** - WebGL/Canvas rendering
+- **@pixi/sound** - Web Audio with autoplay-policy compliance
+- **@pixi/layout** - Yoga-based flexbox layout
 - **Vite** + **TypeScript**
 
 ## Features
@@ -18,7 +18,7 @@ A configurable slot machine demo built with PixiJS 8, TypeScript, and Vite.
 - Lobby music with ducking during gameplay
 - Per-reel click sounds, win/no-win sounds, game-over sound
 - Mute toggle persisted in `localStorage`
-- Responsive layout — scales to any screen size
+- Responsive layout - scales to any screen size
 - Mocked server separated from game logic (`src/server/`)
 
 ## Getting Started
@@ -41,18 +41,23 @@ npm run format    # Prettier
 
 ```
 src/
-  components/       # PixiJS UI components (reels, overlays, controls)
+  components/
+    common/         # Shared primitives (button)
+    popups/         # Transient modal panels (win popup, game over)
+    reels/          # Reel column and reel group
+    screens/        # Full-screen views (lobby, loading)
+    ui/             # In-game controls (header, bet selector, spin button)
   core/
     session/        # Game loop and round logic
     sound/          # Sound manager (Web Audio, mute, ducking)
     state/          # App state
   server/           # Mocked server + API layer
-  shared/           # Config, types, layout constants, styles
+  shared/           # Config, types, layout constants, styles, win math
 ```
 
 ## Deployment
 
-The Vite base is set to `/igt-slot-game/` — build output is ready to serve from that subpath.
+The Vite base is set to `/igt-slot-game/` - build output is ready to serve from that subpath.
 
 ```bash
 npm run build

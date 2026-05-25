@@ -128,7 +128,7 @@ export const loadSounds = (): void => {
   }
 
   // Pre-warm sounds that won't play on this gesture so their first play is instant.
-  // lobby and click are excluded — they may play on this same gesture.
+  // lobby and click are excluded - they may play on this same gesture.
   // Sound.load() exists at runtime but is absent from the v6 type definitions.
   ['spin', 'no-win', 'win', 'big-win', 'jackpot', 'game-over'].forEach((alias) => {
     try {
@@ -158,7 +158,7 @@ document.addEventListener('visibilitychange', () => {
     return;
   }
 
-  // Tab visible again — re-enable plays, then restart continuous sounds
+  // Tab visible again - re-enable plays, then restart continuous sounds
   tabVisible = true;
   if (spinSoundActive && !muted) play('spin', { loop: true, volume: 0.6 });
   if (lobbyMusicActive && !muted) play('lobby', { loop: true, volume: lobbyVol });

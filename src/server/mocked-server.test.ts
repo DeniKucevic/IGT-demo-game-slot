@@ -1,15 +1,16 @@
 import { describe, it, expect } from 'vitest';
 
 import { TIER_PRIZE_MULT } from '../shared/win-math';
+
 import { evaluateLines } from './mocked-server';
 
-// grid[reel][row] — reel-major order matching the server internals
+// grid[reel][row] - reel-major order matching the server internals
 
 describe('evaluateLines', () => {
   it('no matches → empty result with prize 0', () => {
     const grid = [
       [0, 1, 2], // reel 0
-      [1, 2, 0], // reel 1 — row 0 differs from reel 0
+      [1, 2, 0], // reel 1 - row 0 differs from reel 0
       [2, 0, 1], // reel 2
     ];
     const { winningLines, prize } = evaluateLines(grid, 3, 3);
@@ -19,9 +20,9 @@ describe('evaluateLines', () => {
 
   it('all reels match on one row → jackpot', () => {
     const grid = [
-      [5, 1, 2], // reel 0 — row 0 is symbol 5
-      [5, 3, 4], // reel 1 — row 0 is symbol 5
-      [5, 6, 7], // reel 2 — row 0 is symbol 5
+      [5, 1, 2], // reel 0 - row 0 is symbol 5
+      [5, 3, 4], // reel 1 - row 0 is symbol 5
+      [5, 6, 7], // reel 2 - row 0 is symbol 5
     ];
     const { winningLines, prize } = evaluateLines(grid, 3, 3);
     expect(winningLines).toHaveLength(1);
@@ -29,12 +30,12 @@ describe('evaluateLines', () => {
     expect(prize).toBe(TIER_PRIZE_MULT.jackpot);
   });
 
-  it('match stops at first mismatch — does not skip gaps', () => {
+  it('match stops at first mismatch - does not skip gaps', () => {
     // 5 reels, row 0: reels 0-1 match, reel 2 breaks, reels 3-4 also match symbol but ignored
     const grid = [
       [3, 0], // reel 0
       [3, 0], // reel 1
-      [9, 0], // reel 2 — mismatch on row 0
+      [9, 0], // reel 2 - mismatch on row 0
       [3, 0], // reel 3
       [3, 0], // reel 4
     ];
@@ -43,7 +44,7 @@ describe('evaluateLines', () => {
     expect(row0).toMatchObject({ matchCount: 2 }); // stopped at reel 2
   });
 
-  it('multiple rows win simultaneously — prize is summed', () => {
+  it('multiple rows win simultaneously - prize is summed', () => {
     const grid = [
       [7, 2], // reel 0
       [7, 2], // reel 1
@@ -73,7 +74,7 @@ describe('evaluateLines', () => {
       [4, 0], // reel 0
       [4, 0], // reel 1
       [4, 0], // reel 2
-      [9, 0], // reel 3 — breaks the run
+      [9, 0], // reel 3 - breaks the run
       [4, 0], // reel 4
     ];
     const { winningLines } = evaluateLines(grid, 2, 5);

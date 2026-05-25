@@ -14,7 +14,7 @@ export type Chip = { root: Container; setActive: (a: boolean) => void };
 /**
  * Single selectable chip button (bet value or config option).
  * Renders three visual states: default, hover, and active (selected).
- * Active state is sticky — hover is suppressed while active.
+ * Active state is sticky - hover is suppressed while active.
  * @param label - Text displayed inside the chip.
  * @param w - Width in pixels; height is fixed to CHIP_H.
  */
@@ -123,7 +123,7 @@ export type SoundToggle = { root: Container; getMuted: () => boolean };
 
 /**
  * Toggle button that switches between sound-on and sound-off labels.
- * Does not control audio directly — call `getMuted()` to read current state.
+ * Does not control audio directly - call `getMuted()` to read current state.
  * @param w - Button width in pixels; height is fixed to BUTTON_HEIGHT.
  * @param initialMuted - Whether to start in the muted state.
  */

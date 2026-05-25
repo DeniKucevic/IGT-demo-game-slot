@@ -2,7 +2,7 @@ import type { GameConfig } from './config';
 
 export const HEADER_H = 48;
 export const FOOTER_H = 128;
-// Gap between reels and rows — symbol size scales with window, gaps don't
+// Gap between reels and rows - symbol size scales with window, gaps don't
 export const REEL_GAP = 8;
 export const ROW_GAP = 8;
 const H_PAD = 32;

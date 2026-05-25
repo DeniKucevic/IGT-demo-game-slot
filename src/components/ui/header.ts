@@ -3,6 +3,7 @@ import { Container, Graphics, Text } from 'pixi.js';
 
 import { COLORS, STRINGS, STYLES } from '@shared';
 import { HEADER_H } from '@shared/layout';
+
 import { createStatDisplay, type StatDisplay } from './stat-display';
 import { createTitleDisplay, type TitleDisplay } from './title-display';
 

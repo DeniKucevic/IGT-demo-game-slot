@@ -4,6 +4,7 @@ import { initDevtools } from '@pixi/devtools';
 import { Application } from 'pixi.js';
 
 import { COLORS } from '@shared';
+import type { LobbySettings } from '@shared';
 import type { GameConfig } from '@shared/config';
 
 import {
@@ -19,7 +20,6 @@ import {
   duckLobbyMusic,
 } from '@core';
 
-import type { LobbySettings } from '@shared';
 import { createLobbyScreen, createLoadingScreen } from '@components';
 
 // ── App ──
@@ -33,7 +33,7 @@ await app.init({
 initDevtools({ app });
 document.getElementById('app')!.appendChild(app.canvas);
 
-// Defer sound init to first gesture — avoids the AudioContext autoplay warning
+// Defer sound init to first gesture - avoids the AudioContext autoplay warning
 window.addEventListener('pointerdown', loadSounds, { once: true });
 
 // Loading screen while assets fetch

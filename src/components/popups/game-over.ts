@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, Ticker } from 'pixi.js';
 
 import { COLORS, STRINGS, STYLES } from '@shared';
+
 import { createButton } from '../common/button';
 
 const PANEL_W = 360;

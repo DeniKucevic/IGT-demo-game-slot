@@ -1,6 +1,7 @@
 import { Graphics, Text, Ticker } from 'pixi.js';
 
 import { BUTTON_HEIGHT, COLORS, STRINGS, STYLES } from '@shared';
+
 import { createButton } from '../common/button';
 
 export type SpinButton = {
