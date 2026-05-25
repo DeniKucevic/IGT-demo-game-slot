@@ -1,6 +1,6 @@
 import { BlurFilter, Container, Graphics, Text, Ticker } from 'pixi.js';
 
-import { STYLES } from '../../shared';
+import { STYLES } from '@shared';
 
 type LetterAnimationState = {
   textNode: Text;
@@ -15,7 +15,7 @@ export type TitleDisplay = {
   triggerRandomSpin: () => void;
 };
 
-const SPIN_DURATION = 667;
+const SPIN_DURATION = 700;
 
 export const createTitleDisplay = (label: string): TitleDisplay => {
   const root = new Container();

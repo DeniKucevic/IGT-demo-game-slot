@@ -2,6 +2,10 @@ import { TextStyle } from 'pixi.js';
 
 import { COLORS } from './colors';
 
+// Design tokens
+export const BUTTON_HEIGHT = 52;
+
+// Fonts
 export const FONTS = {
   mono: 'monospace',
   title: 'Tahoma',

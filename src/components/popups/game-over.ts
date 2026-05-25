@@ -1,6 +1,6 @@
 import { Container, Graphics, Text, Ticker } from 'pixi.js';
 
-import { COLORS, STRINGS, STYLES } from '../../shared';
+import { COLORS, STRINGS, STYLES } from '@shared';
 import { createButton } from '../common/button';
 
 const PANEL_W = 360;
@@ -23,7 +23,7 @@ export const createGameOverScreen = (screenW: number, screenH: number): GameOver
 
   const overlay = new Graphics()
     .rect(0, 0, screenW, screenH)
-    .fill({ color: 0x000000, alpha: 0.55 });
+    .fill({ color: COLORS.black, alpha: 0.55 });
   overlay.eventMode = 'static';
   root.addChild(overlay);
 
@@ -38,28 +38,19 @@ export const createGameOverScreen = (screenW: number, screenH: number): GameOver
   bg.stroke({ color: COLORS.black, width: 3 });
   panel.addChild(bg);
 
-  const emoji = new Text({
-    text: STRINGS.gameOver.emoji,
-    style: STYLES.overlayEmoji,
-  });
+  const emoji = new Text({ text: STRINGS.gameOver.emoji, style: STYLES.overlayEmoji });
   emoji.anchor.set(0.5);
   emoji.x = 0;
   emoji.y = -PANEL_H / 2 + 46;
   panel.addChild(emoji);
 
-  const headline = new Text({
-    text: STRINGS.gameOver.headline,
-    style: STYLES.overlayHeadline,
-  });
+  const headline = new Text({ text: STRINGS.gameOver.headline, style: STYLES.overlayHeadline });
   headline.anchor.set(0.5);
   headline.x = 0;
   headline.y = -18;
   panel.addChild(headline);
 
-  const sub = new Text({
-    text: STRINGS.gameOver.sub,
-    style: STYLES.overlaySub,
-  });
+  const sub = new Text({ text: STRINGS.gameOver.sub, style: STYLES.overlaySub });
   sub.anchor.set(0.5);
   sub.x = 0;
   sub.y = 10;
@@ -104,7 +95,7 @@ export const createGameOverScreen = (screenW: number, screenH: number): GameOver
 
   const resize = (w: number, h: number): void => {
     overlay.clear();
-    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.55 });
+    overlay.rect(0, 0, w, h).fill({ color: COLORS.black, alpha: 0.55 });
     panel.x = Math.round(w / 2);
     panel.y = Math.round(h / 2);
   };

@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 
-import { COLORS, STRINGS, STYLES } from '../../shared';
-import { BET_VALUES, CUP_ASSET } from '../../shared/config';
+import { COLORS, STRINGS, STYLES } from '@shared';
+import { BET_VALUES, CUP_ASSET } from '@shared/config';
 
 type Option = { name: string; bet: number };
 const OPTIONS: Option[] = [
@@ -11,6 +11,7 @@ const OPTIONS: Option[] = [
   { name: STRINGS.betSelector.names[3], bet: BET_VALUES[3] },
 ];
 
+// Design tokens
 const CARD_W = 64;
 const CARD_H = 90;
 const CARD_GAP = 10;
@@ -25,7 +26,13 @@ export type BetSelector = {
   root: Container;
   getBet: () => number;
   setEnabled: (enabled: boolean) => void;
+  /** Toggles the gold all-in border on the currently selected card. */
   setAllIn: (active: boolean) => void;
+  /**
+   * Caps the selectable options to what the player can afford.
+   * Auto-downgrades the active selection if it exceeds `balance`,
+   * and visually greys out unaffordable options.
+   */
   setMaxBet: (balance: number) => void;
   width: number;
   height: number;

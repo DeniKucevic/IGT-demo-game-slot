@@ -10,7 +10,7 @@ export {
 } from './config';
 export { COLORS } from './colors';
 export type { WinTier, WinLine, ServerResponse, LobbySettings } from './types';
-export { TIER_PRIZE_MULT, getWinTier } from './types';
+export { getWinTier, TIER_PRIZE_MULT } from './win-math';
 export { STRINGS, TIER_LABEL } from './strings';
-export { STYLES, FONTS } from './styles';
+export { STYLES, FONTS, BUTTON_HEIGHT } from './styles';
 export { computeLayout, REEL_GAP, ROW_GAP, type Layout } from './layout';

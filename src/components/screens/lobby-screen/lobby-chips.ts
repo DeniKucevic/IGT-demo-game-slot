@@ -1,8 +1,8 @@
 import { Container, Graphics, Text } from 'pixi.js';
 
-import { COLORS, STRINGS, STYLES } from '../../shared';
-import { BUTTON_HEIGHT } from '../common/button';
+import { BUTTON_HEIGHT, COLORS, STRINGS, STYLES } from '@shared';
 
+// Design tokens
 export const CHIP_H = 40;
 export const CHIP_GAP = 8;
 export const SECTION_GAP = 24;
@@ -11,6 +11,13 @@ export const LABEL_CHIP_GAP = 10;
 
 export type Chip = { root: Container; setActive: (a: boolean) => void };
 
+/**
+ * Single selectable chip button (bet value or config option).
+ * Renders three visual states: default, hover, and active (selected).
+ * Active state is sticky — hover is suppressed while active.
+ * @param label - Text displayed inside the chip.
+ * @param w - Width in pixels; height is fixed to CHIP_H.
+ */
 export const createChip = (label: string, w: number): Chip => {
   const root = new Container();
   root.eventMode = 'static';
@@ -64,6 +71,15 @@ export const createChip = (label: string, w: number): Chip => {
 
 export type ChipRow = { root: Container; getValue: () => number; height: number };
 
+/**
+ * Labelled row of mutually exclusive chips backed by a numeric value list.
+ * Exactly one chip is active at a time; selecting a new one deactivates the previous.
+ * @param label - Section label rendered above the chips.
+ * @param values - Numeric options; each becomes one chip.
+ * @param defaultIndex - Index into `values` that starts selected.
+ * @param rowW - Total row width; chip widths are divided evenly to fill it.
+ * @param onSelect - Called after any selection change.
+ */
 export const createChipRow = (
   label: string,
   values: number[],
@@ -105,6 +121,12 @@ export const createChipRow = (
 
 export type SoundToggle = { root: Container; getMuted: () => boolean };
 
+/**
+ * Toggle button that switches between sound-on and sound-off labels.
+ * Does not control audio directly — call `getMuted()` to read current state.
+ * @param w - Button width in pixels; height is fixed to BUTTON_HEIGHT.
+ * @param initialMuted - Whether to start in the muted state.
+ */
 export const createSoundToggle = (w: number, initialMuted = false): SoundToggle => {
   const root = new Container();
   root.eventMode = 'static';

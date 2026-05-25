@@ -1,11 +1,12 @@
 import '@pixi/layout';
 import { Container, Graphics, Text } from 'pixi.js';
 
-import { COLORS, STRINGS, STYLES } from '../../shared';
-import { HEADER_H } from '../../shared/layout';
+import { COLORS, STRINGS, STYLES } from '@shared';
+import { HEADER_H } from '@shared/layout';
 import { createStatDisplay, type StatDisplay } from './stat-display';
 import { createTitleDisplay, type TitleDisplay } from './title-display';
 
+// Design tokens
 export const TITLE_MIN_W = 560;
 
 const HEADER_MID_Y = HEADER_H / 2;
@@ -57,7 +58,9 @@ export const createGameHeader = (onBack: () => void): GameHeader => {
 
   drawBackBtn(false);
   backBtn.addChild(backBg, backTxt);
-  backBtn.on('pointerover', () => { if (!backBtnDisabled) drawBackBtn(true); });
+  backBtn.on('pointerover', () => {
+    if (!backBtnDisabled) drawBackBtn(true);
+  });
   backBtn.on('pointerout', () => drawBackBtn(false));
   backBtn.on('pointertap', onBack);
 
@@ -90,6 +93,8 @@ export const createGameHeader = (onBack: () => void): GameHeader => {
     gameTitle,
     spinsDisplay,
     setBackBtnDisabled,
-    setTitleVisible: (visible) => { gameTitleWrapper.visible = visible; },
+    setTitleVisible: (visible) => {
+      gameTitleWrapper.visible = visible;
+    },
   };
 };

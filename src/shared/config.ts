@@ -15,7 +15,7 @@ export const SYMBOLS = [
   'cappuccino',
   'mocha',
   'nespresso',
-  'java', // I mean come on :D
+  'java', // I mean come on :D too bad I can't use java logo
   'americano',
   'turkish',
 ];

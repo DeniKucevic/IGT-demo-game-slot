@@ -229,10 +229,8 @@ Day 5 - 2026-05-23 | Bet selector & other UI elements
 
 ### Decisions & reasoning
 
-- **`createGameSession` returns `void`, not an object** - the session manages its own lifecycle (owns the scene container, registers/removes all listeners). No external handle needed; the caller just provides an `onExit` callback.
-- **Scale approach for reel resize, not recreation** - recreating the reel group on every resize would reset animation state and be jarring. Scaling the container is visually clean for a demo; gap sizes scale proportionally rather than staying fixed, which is an acceptable trade-off.
+- **Scale approach for reel resize, not recreation** - recreating the reel group on every resize would reset animation state and be jarring. Scaling the container is visually cleaner.
 - **`reelHolder` wrapper instead of layout on `reelGroup.root`** - giving `@pixi/layout` a separate holder container tells Yoga the bounding box for centering without the layout system interfering with the reel group's internal pixel coordinates or mask.
-- **Event emitter / PubSub skipped** - would add abstraction without solving a concrete problem at this scale. Direct function calls remain clear and fully type-safe.
 
 ### Problems & solutions
 
@@ -247,3 +245,37 @@ Day 5 - 2026-05-23 | Bet selector & other UI elements
 - Polish (lobby resize, overlay resize on window change)
 
 ---
+
+## Day 7 - 2026-05-25 | Final touches & finishing documentation
+
+## TASKS FOR TODAY
+
+- [x] **Test** - Add tests
+- [x] **Sound** - Finish wiring up sounds for the game
+- [x] **Refactor lobby screen** - Break into components and move to where they belong
+- [x] **Go over logs and documentation** - Make sure documentation is updated
+
+### What I did
+
+- Added unit tests across 3 files: `layout.test.ts`, `win-math.test.ts`, `mocked-server.test.ts`
+- Fixed iOS Safari audio: switched from dynamic import to static import and call `audioContext.resume()` synchronously within the user gesture handler
+- Wire up sounds for the game and find sound assets
+- Refactored lobby into managable chunks so that lobby only does orchestration
+- Updated & went over documentation and dev log
+- Fixed `vite.config.ts` base URL: dev server now runs at `/`, production build uses `/igt-slot-game/` subpath for Vercel
+- Hosting
+
+### Decisions & reasoning
+
+- **`win-math.ts` split from `types.ts`** — runtime logic with testable conditions does not belong in a types file.
+- **Header extracted to its own component** — the back button and layout strip was inside a session orchestrator. `createGameHeader(onBack)` makes the dependency explicit and keeps `game-session.ts` focused on game flow, not UI construction.
+- **`common/` only gets truly shared primitives** — `createButton` is in `common/` because it is used by `ui/`, `overlays/game-over`, and `overlays/lobby-screen`. Chips and sound toggle are lobby-only so they stay in `overlays/`.
+
+### Problems & solutions
+
+- **`vite.config.ts` `base` applied to dev server** — setting `base: '/igt-slot-game/'` for Vercel also moved the dev server off root, which was inconvenient. Fixed with `({ command }) => ({ base: command === 'build' ? '/igt-slot-game/' : '/' })`.
+
+
+### Next up
+
+- n/a

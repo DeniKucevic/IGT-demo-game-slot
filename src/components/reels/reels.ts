@@ -1,13 +1,15 @@
 import { Container, Graphics } from 'pixi.js';
 
-import { COLORS } from '../../shared';
-import type { GameConfig } from '../../shared/config';
-import { REEL_STRIPS } from '../../shared/config';
-import { REEL_GAP, ROW_GAP } from '../../shared/layout';
-import type { WinLine } from '../../shared/types';
+import { COLORS } from '@shared';
+import type { GameConfig } from '@shared/config';
+import { REEL_STRIPS } from '@shared/config';
+import { REEL_GAP, ROW_GAP } from '@shared/layout';
+import type { WinLine } from '@shared/types';
 
 import { createReel } from './reel';
 
+// Helper to generate failsafe positions in case we do not get server response
+// in the failsafe time we set
 const generateFailsafePositions = (rowCount: number): number[] => {
   const pos0 = Math.floor(Math.random() * REEL_STRIPS[0].length);
 
@@ -31,7 +33,13 @@ const generateFailsafePositions = (rowCount: number): number[] => {
 
 export type ReelGroup = {
   root: Container;
+  /** Starts all reels spinning. Generates failsafe stop positions internally. */
   spin: (onReelStopped?: () => void) => void;
+  /**
+   * Schedules each reel to stop at the given position.
+   * `onAllStopped` fires after the last reel completes its deceleration.
+   * Call after `spin()`, at any point before FAILSAFE_TIMEOUT elapses.
+   */
   land: (stopPositions: number[], onAllStopped: () => void) => void;
   highlightWins: (winLines: WinLine[]) => void;
   clearHighlights: () => void;
@@ -39,6 +47,12 @@ export type ReelGroup = {
   height: number;
 };
 
+/**
+ * Grid of reels clipped to the visible play area.
+ * Coordinates spin/stop across all columns and counts completions internally.
+ * @param config - Provides reelCount and rowCount.
+ * @param symbolSize - Base symbol size in pixels; passed to each reel for speed scaling.
+ */
 export const createReelGroup = (config: GameConfig, symbolSize: number): ReelGroup => {
   const { reelCount, rowCount } = config;
   const symbolStep = symbolSize + ROW_GAP;

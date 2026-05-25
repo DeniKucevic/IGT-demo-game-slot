@@ -1,8 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 
-import { COLORS, STYLES } from '../../shared';
-
-export const BUTTON_HEIGHT = 52;
+import { COLORS, STYLES } from '@shared';
+import { BUTTON_HEIGHT } from '@shared/styles';
 
 export type Button = {
   root: Container;

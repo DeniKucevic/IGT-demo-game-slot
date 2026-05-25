@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { TIER_PRIZE_MULT } from '../shared/types';
+import { TIER_PRIZE_MULT } from '../shared/win-math';
 import { evaluateLines } from './mocked-server';
 
 // grid[reel][row] — reel-major order matching the server internals

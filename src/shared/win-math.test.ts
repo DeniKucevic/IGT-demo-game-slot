@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { getWinTier, TIER_PRIZE_MULT } from './types';
+import { getWinTier, TIER_PRIZE_MULT } from './win-math';
 
 describe('getWinTier', () => {
   describe('5 reels', () => {

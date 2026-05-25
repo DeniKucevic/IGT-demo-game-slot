@@ -1,11 +1,15 @@
 import { MIN_MATCH_COUNT, REEL_STRIPS, type GameConfig } from '../shared/config';
 import type { WinLine } from '../shared/types';
-import { getWinTier, TIER_PRIZE_MULT } from '../shared/types';
+import { getWinTier, TIER_PRIZE_MULT } from '../shared/win-math';
 
 type EvaluateLines = { winningLines: WinLine[]; prize: number };
 type ServerResponse = { status: number; data: string };
 
-export const evaluateLines = (grid: number[][], rowCount: number, reelCount: number): EvaluateLines => {
+export const evaluateLines = (
+  grid: number[][],
+  rowCount: number,
+  reelCount: number,
+): EvaluateLines => {
   const winningLines: WinLine[] = [];
   let prize = 0;
 

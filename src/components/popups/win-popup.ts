@@ -1,12 +1,14 @@
 import { Container, Graphics, Text, Ticker } from 'pixi.js';
 
-import { COLORS, STRINGS, STYLES, TIER_LABEL, TIER_PRIZE_MULT } from '../../shared';
-import type { WinLine, WinTier } from '../../shared/types';
+import { COLORS, STRINGS, STYLES, TIER_LABEL, TIER_PRIZE_MULT } from '@shared';
+import type { WinLine, WinTier } from '@shared/types';
 
+// Layout tokens
 const POPUP_W = 380;
 const HEADER_H = 58;
 const LINE_H = 30;
 const FOOTER_H = 56;
+const POPUP_PAD = 28;
 
 const TIER_ACCENT: Record<WinTier, string> = {
   small: COLORS.kafePink,
@@ -46,6 +48,11 @@ const easeOutBounce = (t: number): number => {
 
 export type WinPopup = {
   root: Container;
+  /**
+   * Plays the full in → hold → out animation sequence, then calls `onDone`.
+   * Clicking the overlay or pressing Space skips the hold phase early.
+   * Calling `show()` while already visible cancels the current sequence and restarts.
+   */
   show: (winLines: WinLine[], prize: number, onDone: () => void) => void;
   resize: (w: number, h: number) => void;
 };
@@ -109,11 +116,11 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
     bg.roundRect(-POPUP_W / 2, -halfH, POPUP_W, popupH, 4);
     bg.fill({ color: COLORS.white });
     bg.stroke({ color: COLORS.black, width: TIER_BORDER_W[topTier] });
-    bg.moveTo(-POPUP_W / 2 + 28, -halfH + HEADER_H);
-    bg.lineTo(POPUP_W / 2 - 28, -halfH + HEADER_H);
+    bg.moveTo(-POPUP_W / 2 + POPUP_PAD, -halfH + HEADER_H);
+    bg.lineTo(POPUP_W / 2 - POPUP_PAD, -halfH + HEADER_H);
     bg.stroke({ color: COLORS.black, alpha: 0.12, width: 1 });
-    bg.moveTo(-POPUP_W / 2 + 28, halfH - FOOTER_H);
-    bg.lineTo(POPUP_W / 2 - 28, halfH - FOOTER_H);
+    bg.moveTo(-POPUP_W / 2 + POPUP_PAD, halfH - FOOTER_H);
+    bg.lineTo(POPUP_W / 2 - POPUP_PAD, halfH - FOOTER_H);
     bg.stroke({ color: COLORS.black, alpha: 0.12, width: 1 });
 
     const add = (t: Text, x: number, y: number, anchorX: number, anchorY = 0.5): Text => {
@@ -124,35 +131,31 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
       return t;
     };
 
-    add(new Text({ text: STRINGS.winPopup.emoji, style: STYLES.popupEmoji }), 0, -halfH + 28, 0.5);
+    add(
+      new Text({ text: STRINGS.winPopup.emoji, style: STYLES.popupEmoji }),
+      0,
+      -halfH + POPUP_PAD,
+      0.5,
+    );
 
     const lineStartY = -halfH + HEADER_H + LINE_H / 2 + 2;
     winLines.forEach((line, i) => {
       const y = lineStartY + i * LINE_H;
       add(
-        new Text({
-          text: STRINGS.winPopup.rowLabel(line.row + 1),
-          style: STYLES.popupRow,
-        }),
-        -POPUP_W / 2 + 28,
+        new Text({ text: STRINGS.winPopup.rowLabel(line.row + 1), style: STYLES.popupRow }),
+        -POPUP_W / 2 + POPUP_PAD,
         y,
         0,
       );
       add(
-        new Text({
-          text: TIER_LABEL[line.tier],
-          style: STYLES.popupTier(TIER_ACCENT[line.tier]),
-        }),
+        new Text({ text: TIER_LABEL[line.tier], style: STYLES.popupTier(TIER_ACCENT[line.tier]) }),
         0,
         y,
         0.5,
       );
       add(
-        new Text({
-          text: `+${TIER_PRIZE_MULT[line.tier]}×`,
-          style: STYLES.popupMult,
-        }),
-        POPUP_W / 2 - 28,
+        new Text({ text: `+${TIER_PRIZE_MULT[line.tier]}×`, style: STYLES.popupMult }),
+        POPUP_W / 2 - POPUP_PAD,
         y,
         1,
       );
@@ -161,13 +164,13 @@ export const createWinPopup = (screenW: number, screenH: number): WinPopup => {
     const totalY = halfH - FOOTER_H / 2;
     add(
       new Text({ text: STRINGS.winPopup.total, style: STYLES.popupRow }),
-      -POPUP_W / 2 + 28,
+      -POPUP_W / 2 + POPUP_PAD,
       totalY,
       0,
     );
     add(
       new Text({ text: `+${prize}×`, style: STYLES.popupTotal(accent) }),
-      POPUP_W / 2 - 28,
+      POPUP_W / 2 - POPUP_PAD,
       totalY,
       1,
     );

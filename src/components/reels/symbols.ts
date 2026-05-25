@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite, Texture, Ticker } from 'pixi.js';
 
-import { COLORS } from '../../shared';
-import { SYMBOLS } from '../../shared/config';
+import { COLORS } from '@shared';
+import { SYMBOLS } from '@shared/config';
 
 const SYMBOL_COLORS = [
   COLORS.espresso,

@@ -1,1 +1,1 @@
-export { createButton, BUTTON_HEIGHT, type Button } from './button';
+export { createButton, type Button } from './button';

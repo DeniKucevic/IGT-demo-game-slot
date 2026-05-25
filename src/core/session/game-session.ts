@@ -1,7 +1,7 @@
 import '@pixi/layout';
 import { Application, Container, Ticker } from 'pixi.js';
 
-import { computeLayout } from '@shared';
+import { computeLayout, BUTTON_HEIGHT } from '@shared';
 import type { GameConfig } from '@shared/config';
 import { FOOTER_H } from '@shared/layout';
 import type { WinTier } from '@shared/types';
@@ -29,7 +29,6 @@ import {
   TITLE_MIN_W,
   ALLIN_SIZE,
   BET_SELECTOR_WIDTH,
-  BUTTON_HEIGHT,
 } from '@components';
 
 const TIER_ORDER: WinTier[] = ['small', 'win', 'bigwin', 'jackpot'];

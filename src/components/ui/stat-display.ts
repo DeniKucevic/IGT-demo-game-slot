@@ -1,6 +1,6 @@
 import { Container, Text } from 'pixi.js';
 
-import { STYLES } from '../../shared';
+import { STYLES } from '@shared';
 
 export type StatDisplay = {
   root: Container;

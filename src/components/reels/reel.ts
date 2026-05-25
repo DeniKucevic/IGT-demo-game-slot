@@ -1,7 +1,7 @@
 import { Container, Ticker } from 'pixi.js';
 
-import { REEL_STRIPS } from '../../shared/config';
-import { ROW_GAP } from '../../shared/layout';
+import { REEL_STRIPS } from '@shared/config';
+import { ROW_GAP } from '@shared/layout';
 
 import { createSymbolSlot } from './symbols';
 
@@ -27,7 +27,9 @@ type ReelState = {
 
 export type Reel = {
   container: Container;
+  /** Starts the spin animation. `land()` must be called separately once the server responds. */
   spin: (failsafePos: number, onStopped: () => void) => void;
+  /** Schedules deceleration to `stopIndex`. Safe to call before or during the spin phase. */
   land: (stopIndex: number) => void;
   highlightRow: (row: number, on: boolean) => void;
   clearHighlights: () => void;
@@ -43,6 +45,15 @@ const easeOutBounce = (t: number): number => {
   return 1.04 - 0.04 * ((t - 0.75) / 0.25);
 };
 
+/**
+ * Single reel column. Scrolls a virtual strip of symbols using PixiJS Ticker.
+ * `spin()` and `land()` are decoupled — start the spin immediately, call `land()`
+ * whenever the server responds. If no `land()` arrives within FAILSAFE_TIMEOUT,
+ * the reel stops at `failsafePos` automatically.
+ * @param reelIndex - Column index (0-based); selects the strip from REEL_STRIPS.
+ * @param symbolSize - Symbol height/width in pixels; controls scroll speed scaling.
+ * @param rowCount - Visible rows; reel allocates rowCount + 2 slots to hide scroll edges.
+ */
 export const createReel = (reelIndex: number, symbolSize: number, rowCount: number): Reel => {
   const strip = REEL_STRIPS[reelIndex];
   const symbolStep = symbolSize + ROW_GAP;
@@ -98,6 +109,7 @@ export const createReel = (reelIndex: number, symbolSize: number, rowCount: numb
 
     const sharedTicker = Ticker.shared;
 
+    // Here is all the timed logic using pixijs tick
     const onTick = (ticker: Ticker): void => {
       const dt = ticker.deltaMS;
       state.elapsed += dt;
@@ -113,9 +125,10 @@ export const createReel = (reelIndex: number, symbolSize: number, rowCount: numb
       } else if (state.phase === 'spin') {
         state.position += maxSpeed * dt;
 
+        // Failsafe if server never responds
         if (state.pendingStopIndex === null && state.totalElapsed >= FAILSAFE_TIMEOUT) {
           state.pendingStopIndex = failsafePos;
-          state.decelTargetTime = state.totalElapsed + reelIndex * STOP_STAGGER; // Čuva ritam i na pucanju neta
+          state.decelTargetTime = state.totalElapsed + reelIndex * STOP_STAGGER;
         }
 
         if (
@@ -123,6 +136,7 @@ export const createReel = (reelIndex: number, symbolSize: number, rowCount: numb
           state.decelTargetTime !== null &&
           state.totalElapsed >= state.decelTargetTime
         ) {
+          // We divide by 2 to get average
           const minDecelDistance = maxSpeed * DECEL_DURATION * 0.5;
           let targetPos = state.pendingStopIndex;
           while (targetPos <= state.position + minDecelDistance) targetPos += strip.length;

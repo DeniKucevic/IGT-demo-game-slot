@@ -1,7 +1,7 @@
 import { Graphics, Text, Ticker } from 'pixi.js';
 
-import { COLORS, STRINGS, STYLES } from '../../shared';
-import { createButton, BUTTON_HEIGHT } from '../common/button';
+import { BUTTON_HEIGHT, COLORS, STRINGS, STYLES } from '@shared';
+import { createButton } from '../common/button';
 
 export type SpinButton = {
   root: ReturnType<typeof createButton>['root'];

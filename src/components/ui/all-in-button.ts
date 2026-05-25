@@ -1,8 +1,9 @@
 import { Container, Graphics, Sprite, Ticker, Texture } from 'pixi.js';
 
-import { COLORS } from '../../shared';
-import { ALL_IN_ASSET } from '../../shared/config';
+import { COLORS } from '@shared';
+import { ALL_IN_ASSET } from '@shared/config';
 
+// Design tokens
 export const ALLIN_SIZE = 130;
 const GLOW_PAD = 12;
 

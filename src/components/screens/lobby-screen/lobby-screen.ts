@@ -1,7 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 
-import { COLORS, FONTS, STRINGS, STYLES, type LobbySettings } from '../../shared';
-import { BUTTON_HEIGHT, createButton } from '../common/button';
+import { BUTTON_HEIGHT, COLORS, FONTS, STRINGS, STYLES, type LobbySettings } from '@shared';
+import { createButton } from '../../common/button';
 import {
   CHIP_H,
   CHIP_GAP,
