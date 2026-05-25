@@ -4,8 +4,8 @@ import { dirname, resolve } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig({
-  base: '/igt-slot-game/',
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/igt-slot-game/' : '/',
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
@@ -18,4 +18,4 @@ export default defineConfig({
       '@server': resolve(__dirname, 'src/server'),
     },
   },
-});
+}));

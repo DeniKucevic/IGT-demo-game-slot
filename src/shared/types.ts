@@ -33,10 +33,11 @@ export type ServerResponse = {
   prize: number;
 };
 
-export type SpinResult = {
-  response: ServerResponse;
-  betMultiplier: number;
-  totalPrize: number;
-};
-
 export type GameState = 'idle' | 'spinning' | 'showing-win';
+
+export type LobbySettings = {
+  reelCount: number;
+  rowCount: number;
+  startingBalance: number;
+  muted: boolean;
+};

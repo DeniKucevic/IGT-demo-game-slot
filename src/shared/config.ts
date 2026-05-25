@@ -8,10 +8,6 @@ export const MAX_REELS = 5;
 export const MIN_ROWS = 2;
 export const MAX_ROWS = 4;
 export const MIN_MATCH_COUNT = 2;
-// Gap between reels and between symbol rows
-// Symbol size scales with the window, gaps don't.
-export const REEL_GAP = 8;
-export const ROW_GAP = 8;
 
 export const SYMBOLS = [
   'espresso',

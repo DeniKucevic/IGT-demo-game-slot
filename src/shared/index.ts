@@ -4,15 +4,13 @@ export {
   SYMBOLS,
   BET_VALUES,
   REEL_STRIPS,
-  REEL_GAP,
-  ROW_GAP,
   SYMBOLS_PATH,
   CUP_ASSET,
   ALL_IN_ASSET,
 } from './config';
 export { COLORS } from './colors';
-export type { WinTier, WinLine, ServerResponse } from './types';
+export type { WinTier, WinLine, ServerResponse, LobbySettings } from './types';
 export { TIER_PRIZE_MULT, getWinTier } from './types';
 export { STRINGS, TIER_LABEL } from './strings';
 export { STYLES, FONTS } from './styles';
-export { computeLayout, type Layout } from './layout';
+export { computeLayout, REEL_GAP, ROW_GAP, type Layout } from './layout';

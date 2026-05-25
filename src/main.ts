@@ -19,7 +19,8 @@ import {
   duckLobbyMusic,
 } from '@core';
 
-import { createLobbyScreen, createLoadingScreen, type LobbySettings } from '@components';
+import type { LobbySettings } from '@shared';
+import { createLobbyScreen, createLoadingScreen } from '@components';
 
 // ── App ──
 const app = new Application();

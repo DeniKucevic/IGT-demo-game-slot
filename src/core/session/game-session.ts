@@ -1,9 +1,9 @@
 import '@pixi/layout';
-import { Application, Container, Graphics, Text, Ticker } from 'pixi.js';
+import { Application, Container, Ticker } from 'pixi.js';
 
-import { COLORS, computeLayout, STRINGS, STYLES } from '@shared';
+import { computeLayout } from '@shared';
 import type { GameConfig } from '@shared/config';
-import { FOOTER_H, HEADER_H } from '@shared/layout';
+import { FOOTER_H } from '@shared/layout';
 import type { WinTier } from '@shared/types';
 
 import {
@@ -22,11 +22,11 @@ import {
   createReelGroup,
   createSpinButton,
   createWinPopup,
-  createStatDisplay,
   createBetSelector,
   createGameOverScreen,
   createAllInButton,
-  createTitleDisplay,
+  createGameHeader,
+  TITLE_MIN_W,
   ALLIN_SIZE,
   BET_SELECTOR_WIDTH,
   BUTTON_HEIGHT,
@@ -36,13 +36,8 @@ const TIER_ORDER: WinTier[] = ['small', 'win', 'bigwin', 'jackpot'];
 const topWinTier = (tiers: WinTier[]): WinTier =>
   tiers.reduce((best, t) => (TIER_ORDER.indexOf(t) > TIER_ORDER.indexOf(best) ? t : best));
 
-const HEADER_MID_Y = HEADER_H / 2;
 const TITLE_ANIM_INTERVAL = 1500;
-const BACK_BTN_W = 52;
-const BACK_BTN_H = 30;
-const BALANCE_X = BACK_BTN_W + 16;
 const CTRL_GAP = 16;
-const TITLE_MIN_W = 560;
 
 export const createGameSession = (
   config: GameConfig,
@@ -71,84 +66,21 @@ export const createGameSession = (
   });
   const winPopup = createWinPopup(app.screen.width, app.screen.height);
   const gameOverScreen = createGameOverScreen(app.screen.width, app.screen.height);
-  const balanceDisplay = createStatDisplay(STRINGS.header.balance, 'left');
-  const gameTitle = createTitleDisplay(STRINGS.header.title);
-  const spinsDisplay = createStatDisplay(STRINGS.header.spins, 'right');
+  // ── Header ──
+  const header = createGameHeader(() => {
+    if (state.gameState !== 'idle') return;
+    playClick();
+    exitSession();
+  });
+  header.setTitleVisible(app.screen.width >= TITLE_MIN_W);
+  scene.addChild(header.root);
 
   // ── Balance helper ──
   const updateBalance = (newBalance: number): void => {
     state.balance = newBalance;
-    balanceDisplay.setValue(newBalance);
+    header.balanceDisplay.setValue(newBalance);
     betSelector.setMaxBet(newBalance);
   };
-
-  // ── Back button ──
-  const backBtn = new Container();
-  backBtn.eventMode = 'static';
-  backBtn.cursor = 'pointer';
-
-  const backBg = new Graphics();
-  const backTxt = new Text({
-    text: STRINGS.header.back,
-    style: STYLES.backBtn,
-  });
-  backTxt.anchor.set(0.5);
-  backTxt.x = BACK_BTN_W / 2;
-  backTxt.y = BACK_BTN_H / 2;
-  backTxt.eventMode = 'none';
-
-  let backBtnDisabled = false;
-
-  const drawBackBtn = (hover: boolean): void => {
-    backBg.clear();
-    backBg.roundRect(0, 0, BACK_BTN_W, BACK_BTN_H, 4);
-    backBg.fill({
-      color: backBtnDisabled
-        ? COLORS.btnFillDisabled
-        : hover
-          ? COLORS.btnFillHover
-          : COLORS.btnFill,
-    });
-    backTxt.style.fill = backBtnDisabled ? COLORS.hint : COLORS.white;
-  };
-
-  const setBackBtnDisabled = (d: boolean): void => {
-    backBtnDisabled = d;
-    backBtn.cursor = d ? 'default' : 'pointer';
-    drawBackBtn(false);
-  };
-
-  drawBackBtn(false);
-  backBtn.addChild(backBg, backTxt);
-  backBtn.on('pointerover', () => {
-    if (!backBtnDisabled) drawBackBtn(true);
-  });
-  backBtn.on('pointerout', () => drawBackBtn(false));
-
-  // ── Header strip ──
-  // backBtn and balanceDisplay use fixed left: absolute positions — no resize updates needed.
-  // gameTitle and spinsDisplay are wrapped in zero-size containers so @pixi/layout can
-  // position them with left:'50%' and right:24 — they stay responsive automatically.
-  const headerStrip = new Container();
-  headerStrip.layout = { width: '100%', height: HEADER_H };
-
-  backBtn.layout = { position: 'absolute', left: 8, top: Math.round((HEADER_H - BACK_BTN_H) / 2) };
-  balanceDisplay.root.layout = { position: 'absolute', left: BALANCE_X, top: 0 };
-  balanceDisplay.root.y = HEADER_MID_Y;
-
-  const gameTitleWrapper = new Container();
-  gameTitleWrapper.layout = { position: 'absolute', left: '50%', top: 0 };
-  gameTitleWrapper.visible = app.screen.width >= TITLE_MIN_W;
-  gameTitle.root.position.set(0, HEADER_MID_Y);
-  gameTitleWrapper.addChild(gameTitle.root);
-
-  const spinsWrapper = new Container();
-  spinsWrapper.layout = { position: 'absolute', right: 24, top: 0 };
-  spinsDisplay.root.position.set(0, HEADER_MID_Y);
-  spinsWrapper.addChild(spinsDisplay.root);
-
-  headerStrip.addChild(backBtn, balanceDisplay.root, gameTitleWrapper, spinsWrapper);
-  scene.addChild(headerStrip);
 
   // ── Reels area ──
   const reelsArea = new Container();
@@ -213,7 +145,7 @@ export const createGameSession = (
   scene.addChild(winPopup.root, gameOverScreen.root);
 
   updateBalance(state.balance);
-  spinsDisplay.setValue(state.spinCount);
+  header.spinsDisplay.setValue(state.spinCount);
   setMuted(state.muted);
 
   // ── Resize handler ──
@@ -234,7 +166,7 @@ export const createGameSession = (
     positionControls(w, newReelsX);
     winPopup.resize(w, h);
     gameOverScreen.resize(w, h);
-    gameTitleWrapper.visible = w >= TITLE_MIN_W;
+    header.setTitleVisible(w >= TITLE_MIN_W);
   };
 
   app.renderer.on('resize', onResize);
@@ -247,7 +179,7 @@ export const createGameSession = (
     }
     state.titleAnimationTime += ticker.deltaMS;
     if (state.titleAnimationTime >= TITLE_ANIM_INTERVAL) {
-      gameTitle.triggerRandomSpin();
+      header.gameTitle.triggerRandomSpin();
       state.titleAnimationTime = 0;
     }
   };
@@ -265,7 +197,7 @@ export const createGameSession = (
     spinButton.setEnabled(enabled);
     betSelector.setEnabled(enabled);
     allInButton.setEnabled(enabled);
-    setBackBtnDisabled(!enabled);
+    header.setBackBtnDisabled(!enabled);
   };
 
   const endRound = (): void => {
@@ -290,7 +222,7 @@ export const createGameSession = (
     updateBalance(state.balance - bet);
     state.spinCount++;
 
-    spinsDisplay.setValue(state.spinCount);
+    header.spinsDisplay.setValue(state.spinCount);
     setControlsEnabled(false);
     state.isAllIn = false;
     allInButton.setActive(false);
@@ -355,10 +287,4 @@ export const createGameSession = (
   };
 
   window.addEventListener('keydown', onKeyDown);
-
-  backBtn.on('pointertap', () => {
-    if (state.gameState !== 'idle') return;
-    playClick();
-    exitSession();
-  });
 };

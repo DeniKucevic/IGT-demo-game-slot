@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { REEL_GAP, ROW_GAP } from './config';
+import { REEL_GAP, ROW_GAP } from './layout';
 import { computeLayout, HEADER_H, FOOTER_H } from './layout';
 
 const cfg5x3 = { reelCount: 5, rowCount: 3 };

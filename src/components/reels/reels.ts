@@ -2,7 +2,8 @@ import { Container, Graphics } from 'pixi.js';
 
 import { COLORS } from '../../shared';
 import type { GameConfig } from '../../shared/config';
-import { REEL_GAP, REEL_STRIPS, ROW_GAP } from '../../shared/config';
+import { REEL_STRIPS } from '../../shared/config';
+import { REEL_GAP, ROW_GAP } from '../../shared/layout';
 import type { WinLine } from '../../shared/types';
 
 import { createReel } from './reel';

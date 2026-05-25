@@ -1,6 +1,7 @@
 import { Container, Ticker } from 'pixi.js';
 
-import { REEL_STRIPS, ROW_GAP } from '../../shared/config';
+import { REEL_STRIPS } from '../../shared/config';
+import { ROW_GAP } from '../../shared/layout';
 
 import { createSymbolSlot } from './symbols';
 
@@ -32,8 +33,8 @@ export type Reel = {
   clearHighlights: () => void;
 };
 
+// https://easings.net/
 const easeIn = (t: number): number => t * t;
-
 const easeOutBounce = (t: number): number => {
   if (t < 0.75) {
     const s = t / 0.75;
