@@ -5,7 +5,7 @@ import { getWinTier, TIER_PRIZE_MULT } from '../shared/types';
 type EvaluateLines = { winningLines: WinLine[]; prize: number };
 type ServerResponse = { status: number; data: string };
 
-const evaluateLines = (grid: number[][], rowCount: number, reelCount: number): EvaluateLines => {
+export const evaluateLines = (grid: number[][], rowCount: number, reelCount: number): EvaluateLines => {
   const winningLines: WinLine[] = [];
   let prize = 0;
 

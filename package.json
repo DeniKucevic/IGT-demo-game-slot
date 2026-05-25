@@ -8,6 +8,8 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.{ts,js}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
@@ -22,7 +24,8 @@
     "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.3",
     "typescript": "~6.0.2",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "vitest": "^4.1.7"
   },
   "dependencies": {
     "@pixi/layout": "^3.2.0",
